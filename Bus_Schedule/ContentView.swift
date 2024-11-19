@@ -17,7 +17,7 @@ struct ContentView: View {
             VStack(spacing: 12) {
                 Image(systemName: "bus.fill")
                     .font(.system(size: 35))
-                    .foregroundColor(.green)
+                    .foregroundColor(location == .phIINewCampus ? .green : .blue)
                 
                 Text("Campus Shuttle \nSchedule")
                     .font(.title)

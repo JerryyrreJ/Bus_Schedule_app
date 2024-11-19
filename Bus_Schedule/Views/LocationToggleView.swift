@@ -3,6 +3,9 @@ import SwiftUI
 struct LocationToggleView: View {
     @Binding var location: Location
     
+    // 创建震动反馈生成器
+    private let feedback = UIImpactFeedbackGenerator(style: .medium)
+    
     var body: some View {
         VStack(spacing: 24) {
             Text("Select Your Location")
@@ -15,6 +18,7 @@ struct LocationToggleView: View {
                     isSelected: location == .phIINewCampus,
                     color: .green
                 ) {
+                    feedback.impactOccurred() // 触发震动
                     location = .phIINewCampus
                 }
                 
@@ -23,6 +27,7 @@ struct LocationToggleView: View {
                     isSelected: location == .phIParkingLot,
                     color: .blue
                 ) {
+                    feedback.impactOccurred() // 触发震动
                     location = .phIParkingLot
                 }
             }

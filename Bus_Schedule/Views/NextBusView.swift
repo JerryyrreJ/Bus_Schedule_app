@@ -150,8 +150,8 @@ struct NextBusView: View {
         let minute = calendar.component(.minute, from: now)
         let currentTime = hour * 60 + minute
         
-        print("Current location: \(location)")
-        print("Current time: \(hour):\(minute)")
+        // print("Current location: \(location)")
+        // print("Current time: \(hour):\(minute)")
         
         let schedule = Schedule.getCurrentSchedule(dayType)
         
