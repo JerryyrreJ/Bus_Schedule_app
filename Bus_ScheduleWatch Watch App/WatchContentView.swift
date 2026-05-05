@@ -8,7 +8,7 @@
 //  so the swap survives across app launches.
 //
 //  Day-type override is read-only on watch — to change it, use the iPhone
-//  widget chip, the change syncs back via iCloud KV.
+//  app or widget chip, then WatchConnectivity syncs the latest state over.
 //
 
 import SwiftUI
@@ -17,7 +17,7 @@ import BusScheduleCore
 
 struct WatchContentView: View {
     /// User's preferred route on this device. Stored in App Group UserDefaults
-    /// (local only, not iCloud — route preference is per-device by design).
+    /// (local only — route preference is per-device by design).
     @AppStorage("primaryRoute", store: SharedStore.localDefaults)
     private var primaryRoute: Location = .phIINewCampus
 
@@ -48,9 +48,8 @@ struct WatchContentView: View {
             currentSecondsFromMidnight: currentSeconds
         )
 
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 0) {
             routeHeader
-                .padding(.bottom, 2)
 
             switch state {
             case let .scheduled(time, departureSeconds):
@@ -64,28 +63,27 @@ struct WatchContentView: View {
             case .noMoreBuses:
                 noMoreBusesBlock(date: date)
             }
-
-            Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private var routeHeader: some View {
         Button(action: swap) {
-            HStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Image(systemName: WidgetTheme.busSymbol)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Text(WidgetTheme.routeLabel(for: primaryRoute))
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Spacer(minLength: 4)
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
     }
@@ -101,63 +99,90 @@ struct WatchContentView: View {
             limit: 2
         )
 
+        // Hero: big departure time — fills the full width.
         Text(time)
-            .font(.system(size: 44, weight: WidgetTheme.bigTimeWeight(for: urgency), design: .rounded))
+            .font(.system(size: 64, weight: WidgetTheme.bigTimeWeight(for: urgency), design: .rounded))
             .monospacedDigit()
-            .kerning(-1.5)
+            .kerning(-2)
             .foregroundStyle(urgency == .critical ? Color.red : Color.primary)
             .lineLimit(1)
-            .minimumScaleFactor(0.55)
+            .minimumScaleFactor(0.5)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 6)
 
-        HStack(spacing: 4) {
+        // Countdown — second focal point, baseline-aligned for tight visual.
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
             Text(urgency == .critical ? "Departing in" : "Leaves in")
-                .font(.system(size: 10))
+                .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Text(CountdownFormatter.string(forSeconds: remaining))
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .font(.system(size: 17, weight: .heavy, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: primaryRoute))
         }
+        .padding(.top, 2)
+
+        // Push the THEN row to the bottom of the screen.
+        Spacer(minLength: 6)
 
         if !upcoming.isEmpty {
-            HStack(spacing: 4) {
+            Divider()
+                .opacity(0.25)
+                .padding(.bottom, 5)
+
+            HStack(spacing: 6) {
                 Text("THEN")
-                    .font(.system(size: 9, weight: .heavy))
-                    .tracking(1.0)
-                    .foregroundStyle(.secondary)
-                Text(upcoming.joined(separator: " · "))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(.system(size: 10, weight: .heavy))
+                    .tracking(1.2)
+                    .foregroundStyle(.tertiary)
+                Text(upcoming.joined(separator: "  ·  "))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: 0)
             }
-            .padding(.top, 4)
         }
     }
 
     @ViewBuilder
     private func returnImmediatelyBlock(currentSeconds: Int) -> some View {
-        Text("Return Immediately")
-            .font(.system(size: 18, weight: .semibold, design: .rounded))
+        Text("Return\nImmediately")
+            .font(.system(size: 26, weight: .semibold, design: .rounded))
             .foregroundStyle(.green)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            .lineLimit(2)
+            .minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
 
         Text("Continuous pickup loop is active.")
-            .font(.system(size: 11))
+            .font(.system(size: 12))
             .foregroundStyle(.secondary)
             .lineLimit(2)
+            .padding(.top, 4)
+
+        Spacer(minLength: 6)
 
         if let deadline = Schedule.returnImmediatelyDeadline(
             dayType: dayType,
             currentSecondsFromMidnight: currentSeconds
         ) {
-            Text("Until \(deadline)")
-                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                .foregroundStyle(.green)
-                .monospacedDigit()
-                .padding(.top, 2)
+            Divider()
+                .opacity(0.25)
+                .padding(.bottom, 5)
+
+            HStack(spacing: 6) {
+                Text("UNTIL")
+                    .font(.system(size: 10, weight: .heavy))
+                    .tracking(1.2)
+                    .foregroundStyle(.tertiary)
+                Text(deadline)
+                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.green)
+                    .monospacedDigit()
+                Spacer(minLength: 0)
+            }
         }
     }
 
@@ -167,20 +192,30 @@ struct WatchContentView: View {
         let firstTime = Schedule.firstDeparture(for: primaryRoute, dayType: nextDay.dayType)
 
         Text("Service ended")
-            .font(.system(size: 16, weight: .semibold, design: .rounded))
+            .font(.system(size: 18, weight: .semibold, design: .rounded))
             .foregroundStyle(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
+
+        Spacer(minLength: 6)
 
         if let firstTime {
+            Divider()
+                .opacity(0.25)
+                .padding(.bottom, 5)
+
             Text("FIRST TOMORROW")
-                .font(.system(size: 9, weight: .heavy))
-                .tracking(1.0)
-                .foregroundStyle(.secondary)
-                .padding(.top, 2)
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(1.2)
+                .foregroundStyle(.tertiary)
             Text(firstTime)
-                .font(.system(size: 32, weight: .ultraLight, design: .rounded))
+                .font(.system(size: 40, weight: .ultraLight, design: .rounded))
                 .monospacedDigit()
-                .kerning(-1.0)
+                .kerning(-1.5)
                 .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

@@ -21,8 +21,8 @@ struct ContentView: View {
             set: { newValue in
                 let auto = DayType.automatic(for: Date())
                 dayType = newValue
-                // SharedStore writes to both App Group UserDefaults and iCloud KV
-                // so the change propagates to widgets and to the Watch.
+                // SharedStore writes to App Group UserDefaults and republishes
+                // the latest state to the paired Watch.
                 SharedStore.writeOverride(newValue == auto ? nil : newValue)
                 WidgetCenter.shared.reloadAllTimelines()
             }
@@ -66,8 +66,8 @@ struct ContentView: View {
             applyEffectiveDayType()
         }
         .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange)) { _ in
-            // Fired when iCloud delivers a remote change (e.g. user toggled on
-            // their Watch). Re-read the effective day type from SharedStore.
+            // Fired when a synced override arrives from the counterpart device.
+            // Re-read the effective day type from SharedStore.
             applyEffectiveDayType()
         }
     }
