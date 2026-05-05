@@ -8,6 +8,7 @@
 
 import WidgetKit
 import SwiftUI
+import BusScheduleCore
 
 struct ShuttleHomeWidget: Widget {
     let kind: String = "ShuttleHomeWidget"

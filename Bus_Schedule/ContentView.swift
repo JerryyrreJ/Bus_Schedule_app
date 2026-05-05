@@ -8,17 +8,12 @@
 import SwiftUI
 import UIKit
 import WidgetKit
+import BusScheduleCore
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var location: Location = .phIINewCampus
     @State private var dayType: DayType = .weekday
-
-    /// Persisted manual override of the day type. Empty string means "follow auto".
-    /// Stored in the App Group suite so the main app and the Widget extension
-    /// share the same value.
-    @AppStorage("dayTypeOverride", store: SharedStore.defaults)
-    private var dayTypeOverrideRaw: String = ""
 
     private var dayTypeBinding: Binding<DayType> {
         Binding(
@@ -26,12 +21,9 @@ struct ContentView: View {
             set: { newValue in
                 let auto = DayType.automatic(for: Date())
                 dayType = newValue
-                // If the user picks the auto-detected value, clear the override so
-                // the chip flips back to "Auto · …". Otherwise persist the manual
-                // selection so it survives across launches.
-                dayTypeOverrideRaw = (newValue == auto) ? "" : newValue.rawValue
-                // Tell WidgetKit to refresh: a chip change should propagate to the
-                // home/lock-screen widgets immediately.
+                // SharedStore writes to both App Group UserDefaults and iCloud KV
+                // so the change propagates to widgets and to the Watch.
+                SharedStore.writeOverride(newValue == auto ? nil : newValue)
                 WidgetCenter.shared.reloadAllTimelines()
             }
         )
@@ -73,6 +65,11 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             applyEffectiveDayType()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange)) { _ in
+            // Fired when iCloud delivers a remote change (e.g. user toggled on
+            // their Watch). Re-read the effective day type from SharedStore.
+            applyEffectiveDayType()
+        }
     }
 
     private var header: some View {
@@ -94,12 +91,7 @@ struct ContentView: View {
     /// clear it so the chip naturally flips back to "Auto · …".
     private func applyEffectiveDayType(referenceDate: Date = Date()) {
         SharedStore.selfHealOverride(for: referenceDate)
-        let resolved = DayType.effective(for: referenceDate)
-        dayType = resolved.dayType
-    }
-
-    private static func automaticDayType(for date: Date) -> DayType {
-        DayType.automatic(for: date)
+        dayType = DayType.effective(for: referenceDate).dayType
     }
 }
 

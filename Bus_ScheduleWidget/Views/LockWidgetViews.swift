@@ -13,6 +13,7 @@
 
 import SwiftUI
 import WidgetKit
+import BusScheduleCore
 
 // MARK: - Rectangular
 

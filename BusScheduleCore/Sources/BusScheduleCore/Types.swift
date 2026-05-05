@@ -1,30 +1,44 @@
+//
+//  Types.swift
+//  BusScheduleCore
+//
+//  Core domain types shared across iPhone app, iPhone widget, watchOS app,
+//  and watchOS complications. Schedule data is bundled — no remote fetch.
+//
+
 import Foundation
 
-enum Location {
+public enum Location: String, Sendable {
     case phIINewCampus
     case phIParkingLot
 }
 
-enum DayType: String, CaseIterable {
+public enum DayType: String, CaseIterable, Sendable {
     case weekday
     case saturday
     case sundayOrHoliday
 }
 
-struct BusTime: Identifiable {
-    let id: Int
-    let phII: String
-    let phI: String
+public struct BusTime: Identifiable, Sendable {
+    public let id: Int
+    public let phII: String
+    public let phI: String
+
+    public init(id: Int, phII: String, phI: String) {
+        self.id = id
+        self.phII = phII
+        self.phI = phI
+    }
 }
 
-enum NextDepartureState {
+public enum NextDepartureState: Sendable {
     case scheduled(time: String, departureSecondsFromMidnight: Int)
     case returnImmediately
     case noMoreBuses
 }
 
-struct Schedule {
-    static let weekday: [BusTime] = [
+public enum Schedule {
+    public static let weekday: [BusTime] = [
         BusTime(id: 1, phII: "07:30", phI: "Return Immediately"),
         BusTime(id: 2, phII: "07:40", phI: "Return Immediately"),
         BusTime(id: 3, phII: "07:50", phI: "Return Immediately"),
@@ -62,8 +76,8 @@ struct Schedule {
         BusTime(id: 35, phII: "21:40", phI: "22:00"),
         BusTime(id: 36, phII: "22:10", phI: "22:30")
     ]
-    
-    static let saturday: [BusTime] = [
+
+    public static let saturday: [BusTime] = [
         BusTime(id: 1, phII: "07:40", phI: "08:00"),
         BusTime(id: 2, phII: "08:10", phI: "08:30"),
         BusTime(id: 3, phII: "08:20", phI: ""),
@@ -98,7 +112,7 @@ struct Schedule {
         BusTime(id: 32, phII: "22:40", phI: "23:00")
     ]
 
-    static let sundayOrHoliday: [BusTime] = [
+    public static let sundayOrHoliday: [BusTime] = [
         BusTime(id: 1, phII: "07:40", phI: "08:00"),
         BusTime(id: 2, phII: "08:10", phI: "08:30"),
         BusTime(id: 3, phII: "08:40", phI: "09:00"),
@@ -131,20 +145,16 @@ struct Schedule {
         BusTime(id: 30, phII: "22:10", phI: "22:30"),
         BusTime(id: 31, phII: "22:40", phI: "23:00")
     ]
-    
-    // 辅助方法：获取当前时刻表
-    static func getCurrentSchedule(_ dayType: DayType) -> [BusTime] {
+
+    public static func getCurrentSchedule(_ dayType: DayType) -> [BusTime] {
         switch dayType {
-        case .weekday:
-            return weekday
-        case .saturday:
-            return saturday
-        case .sundayOrHoliday:
-            return sundayOrHoliday
+        case .weekday:         return weekday
+        case .saturday:        return saturday
+        case .sundayOrHoliday: return sundayOrHoliday
         }
     }
 
-    static func nextDepartureState(
+    public static func nextDepartureState(
         for location: Location,
         dayType: DayType,
         currentSecondsFromMidnight: Int
@@ -170,7 +180,7 @@ struct Schedule {
         return .noMoreBuses
     }
 
-    static func upcomingDepartures(
+    public static func upcomingDepartures(
         for location: Location,
         dayType: DayType,
         currentSecondsFromMidnight: Int,
@@ -218,7 +228,7 @@ struct Schedule {
         return false
     }
 
-    static func secondsFromTimeString(_ timeString: String) -> Int? {
+    public static func secondsFromTimeString(_ timeString: String) -> Int? {
         let components = timeString.split(separator: ":")
 
         guard components.count == 2,

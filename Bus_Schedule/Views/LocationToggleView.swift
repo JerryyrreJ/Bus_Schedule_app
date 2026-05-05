@@ -1,4 +1,5 @@
 import SwiftUI
+import BusScheduleCore
 
 struct LocationToggleView: View {
     @Binding var location: Location

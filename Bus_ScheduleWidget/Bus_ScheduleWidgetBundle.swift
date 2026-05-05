@@ -11,6 +11,7 @@
 
 import WidgetKit
 import SwiftUI
+import BusScheduleCore
 
 @main
 struct Bus_ScheduleWidgetBundle: WidgetBundle {

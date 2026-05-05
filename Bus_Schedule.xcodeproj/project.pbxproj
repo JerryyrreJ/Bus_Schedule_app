@@ -10,6 +10,14 @@
 		3F8823E32FA9E3350070C89C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E22FA9E3350070C89C /* WidgetKit.framework */; };
 		3F8823E52FA9E3350070C89C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E42FA9E3350070C89C /* SwiftUI.framework */; };
 		3F8823F22FA9E3370070C89C /* Bus_ScheduleWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3F8824122FA9F5B20070C89C /* BusScheduleCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8824112FA9F5B20070C89C /* BusScheduleCore */; };
+		3F8824142FA9F62F0070C89C /* BusScheduleCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8824132FA9F62F0070C89C /* BusScheduleCore */; };
+		3F8824232FA9F6A50070C89C /* Bus_ScheduleWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3F8824322FA9F74A0070C89C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E22FA9E3350070C89C /* WidgetKit.framework */; };
+		3F8824332FA9F74A0070C89C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E42FA9E3350070C89C /* SwiftUI.framework */; };
+		3F8824402FA9F74B0070C89C /* Bus_ScheduleWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3F8824832FA9F9E20070C89C /* BusScheduleCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8824822FA9F9E20070C89C /* BusScheduleCore */; };
+		3F8824852FA9F9ED0070C89C /* BusScheduleCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3F8824842FA9F9ED0070C89C /* BusScheduleCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -19,6 +27,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3F8823DF2FA9E3350070C89C;
 			remoteInfo = Bus_ScheduleWidgetExtension;
+		};
+		3F8824212FA9F6A50070C89C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F735EC82CE1BE3700C1BB86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F8824182FA9F6A40070C89C;
+			remoteInfo = "Bus_ScheduleWatch Watch App";
+		};
+		3F88243E2FA9F74B0070C89C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F735EC82CE1BE3700C1BB86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F8824302FA9F74A0070C89C;
+			remoteInfo = Bus_ScheduleWatchWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -34,6 +56,28 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F8824272FA9F6A50070C89C /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				3F8824232FA9F6A50070C89C /* Bus_ScheduleWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F8824452FA9F74B0070C89C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3F8824402FA9F74B0070C89C /* Bus_ScheduleWatchWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +86,9 @@
 		3F8823E22FA9E3350070C89C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3F8823E42FA9E3350070C89C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bus_ScheduleWidgetExtension.entitlements; sourceTree = "<group>"; };
+		3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Bus_ScheduleWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Bus_ScheduleWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F8824862FA9FA1B0070C89C /* Bus_ScheduleWatchWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bus_ScheduleWatchWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,24 +99,18 @@
 			);
 			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
 		};
-		3F88240B2FA9E6230070C89C /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */ = {
+		3F8824412FA9F74B0070C89C /* Exceptions for "Bus_ScheduleWatchWidget" folder in "Bus_ScheduleWatchWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Intents/ToggleDayTypeIntent.swift,
-				Models/Types.swift,
-				Shared/ScheduleQueries.swift,
-				Shared/SharedStore.swift,
+				Info.plist,
 			);
-			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
+			target = 3F8824302FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				3F88240B2FA9E6230070C89C /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */,
-			);
 			path = Bus_Schedule;
 			sourceTree = "<group>";
 		};
@@ -81,6 +122,19 @@
 			path = Bus_ScheduleWidget;
 			sourceTree = "<group>";
 		};
+		3F88241A2FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Bus_ScheduleWatch Watch App";
+			sourceTree = "<group>";
+		};
+		3F8824342FA9F74A0070C89C /* Bus_ScheduleWatchWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F8824412FA9F74B0070C89C /* Exceptions for "Bus_ScheduleWatchWidget" folder in "Bus_ScheduleWatchWidgetExtension" target */,
+			);
+			path = Bus_ScheduleWatchWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +142,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F8824122FA9F5B20070C89C /* BusScheduleCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,6 +152,25 @@
 			files = (
 				3F8823E52FA9E3350070C89C /* SwiftUI.framework in Frameworks */,
 				3F8823E32FA9E3350070C89C /* WidgetKit.framework in Frameworks */,
+				3F8824142FA9F62F0070C89C /* BusScheduleCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F8824162FA9F6A40070C89C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F8824832FA9F9E20070C89C /* BusScheduleCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F88242E2FA9F74A0070C89C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F8824332FA9F74A0070C89C /* SwiftUI.framework in Frameworks */,
+				3F8824322FA9F74A0070C89C /* WidgetKit.framework in Frameworks */,
+				3F8824852FA9F9ED0070C89C /* BusScheduleCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,9 +180,12 @@
 		3F735EC72CE1BE3700C1BB86 = {
 			isa = PBXGroup;
 			children = (
+				3F8824862FA9FA1B0070C89C /* Bus_ScheduleWatchWidgetExtension.entitlements */,
 				3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */,
 				3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */,
 				3F8823E62FA9E3350070C89C /* Bus_ScheduleWidget */,
+				3F88241A2FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */,
+				3F8824342FA9F74A0070C89C /* Bus_ScheduleWatchWidget */,
 				3F8823E12FA9E3350070C89C /* Frameworks */,
 				3F735ED12CE1BE3700C1BB86 /* Products */,
 			);
@@ -119,6 +196,8 @@
 			children = (
 				3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */,
 				3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */,
+				3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */,
+				3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -143,17 +222,20 @@
 				3F735ECD2CE1BE3700C1BB86 /* Frameworks */,
 				3F735ECE2CE1BE3700C1BB86 /* Resources */,
 				3F8823F72FA9E3370070C89C /* Embed Foundation Extensions */,
+				3F8824272FA9F6A50070C89C /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				3F8823F12FA9E3370070C89C /* PBXTargetDependency */,
+				3F8824222FA9F6A50070C89C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */,
 			);
 			name = Bus_Schedule;
 			packageProductDependencies = (
+				3F8824112FA9F5B20070C89C /* BusScheduleCore */,
 			);
 			productName = Bus_Schedule;
 			productReference = 3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */;
@@ -176,9 +258,58 @@
 			);
 			name = Bus_ScheduleWidgetExtension;
 			packageProductDependencies = (
+				3F8824132FA9F62F0070C89C /* BusScheduleCore */,
 			);
 			productName = Bus_ScheduleWidgetExtension;
 			productReference = 3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		3F8824182FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F8824242FA9F6A50070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWatch Watch App" */;
+			buildPhases = (
+				3F8824152FA9F6A40070C89C /* Sources */,
+				3F8824162FA9F6A40070C89C /* Frameworks */,
+				3F8824172FA9F6A40070C89C /* Resources */,
+				3F8824452FA9F74B0070C89C /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3F88243F2FA9F74B0070C89C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3F88241A2FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */,
+			);
+			name = "Bus_ScheduleWatch Watch App";
+			packageProductDependencies = (
+				3F8824822FA9F9E20070C89C /* BusScheduleCore */,
+			);
+			productName = "Bus_ScheduleWatch Watch App";
+			productReference = 3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3F8824302FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F8824422FA9F74B0070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWatchWidgetExtension" */;
+			buildPhases = (
+				3F88242D2FA9F74A0070C89C /* Sources */,
+				3F88242E2FA9F74A0070C89C /* Frameworks */,
+				3F88242F2FA9F74A0070C89C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3F8824342FA9F74A0070C89C /* Bus_ScheduleWatchWidget */,
+			);
+			name = Bus_ScheduleWatchWidgetExtension;
+			packageProductDependencies = (
+				3F8824842FA9F9ED0070C89C /* BusScheduleCore */,
+			);
+			productName = Bus_ScheduleWatchWidgetExtension;
+			productReference = 3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -197,6 +328,12 @@
 					3F8823DF2FA9E3350070C89C = {
 						CreatedOnToolsVersion = 26.4;
 					};
+					3F8824182FA9F6A40070C89C = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					3F8824302FA9F74A0070C89C = {
+						CreatedOnToolsVersion = 26.4;
+					};
 				};
 			};
 			buildConfigurationList = 3F735ECB2CE1BE3700C1BB86 /* Build configuration list for PBXProject "Bus_Schedule" */;
@@ -208,6 +345,9 @@
 			);
 			mainGroup = 3F735EC72CE1BE3700C1BB86;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3F8824102FA9F5B20070C89C /* XCLocalSwiftPackageReference "BusScheduleCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3F735ED12CE1BE3700C1BB86 /* Products */;
 			projectDirPath = "";
@@ -215,6 +355,8 @@
 			targets = (
 				3F735ECF2CE1BE3700C1BB86 /* Bus_Schedule */,
 				3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */,
+				3F8824182FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */,
+				3F8824302FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -228,6 +370,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		3F8823DE2FA9E3350070C89C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F8824172FA9F6A40070C89C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F88242F2FA9F74A0070C89C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -251,6 +407,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F8824152FA9F6A40070C89C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F88242D2FA9F74A0070C89C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -258,6 +428,16 @@
 			isa = PBXTargetDependency;
 			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
 			targetProxy = 3F8823F02FA9E3370070C89C /* PBXContainerItemProxy */;
+		};
+		3F8824222FA9F6A50070C89C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F8824182FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */;
+			targetProxy = 3F8824212FA9F6A50070C89C /* PBXContainerItemProxy */;
+		};
+		3F88243F2FA9F74B0070C89C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F8824302FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension */;
+			targetProxy = 3F88243E2FA9F74B0070C89C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -521,6 +701,144 @@
 			};
 			name = Release;
 		};
+		3F8824252FA9F6A50070C89C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Bus_ScheduleWatch Watch App/Bus_ScheduleWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "Jerry-Lu.Bus-Schedule";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		3F8824262FA9F6A50070C89C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Bus_ScheduleWatch Watch App/Bus_ScheduleWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "Jerry-Lu.Bus-Schedule";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
+		3F8824432FA9F74B0070C89C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Bus_ScheduleWatchWidget/Bus_ScheduleWatchWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Bus_ScheduleWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatchWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.watchkitapp.Bus-ScheduleWatchWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		3F8824442FA9F74B0070C89C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Bus_ScheduleWatchWidget/Bus_ScheduleWatchWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Bus_ScheduleWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatchWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.watchkitapp.Bus-ScheduleWatchWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -551,7 +869,54 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		3F8824242FA9F6A50070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F8824252FA9F6A50070C89C /* Debug */,
+				3F8824262FA9F6A50070C89C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3F8824422FA9F74B0070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F8824432FA9F74B0070C89C /* Debug */,
+				3F8824442FA9F74B0070C89C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3F8824102FA9F5B20070C89C /* XCLocalSwiftPackageReference "BusScheduleCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = BusScheduleCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3F8824112FA9F5B20070C89C /* BusScheduleCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BusScheduleCore;
+		};
+		3F8824132FA9F62F0070C89C /* BusScheduleCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F8824102FA9F5B20070C89C /* XCLocalSwiftPackageReference "BusScheduleCore" */;
+			productName = BusScheduleCore;
+		};
+		3F8824822FA9F9E20070C89C /* BusScheduleCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F8824102FA9F5B20070C89C /* XCLocalSwiftPackageReference "BusScheduleCore" */;
+			productName = BusScheduleCore;
+		};
+		3F8824842FA9F9ED0070C89C /* BusScheduleCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F8824102FA9F5B20070C89C /* XCLocalSwiftPackageReference "BusScheduleCore" */;
+			productName = BusScheduleCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3F735EC82CE1BE3700C1BB86 /* Project object */;
 }

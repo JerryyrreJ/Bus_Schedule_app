@@ -11,6 +11,7 @@
 
 import SwiftUI
 import WidgetKit
+import BusScheduleCore
 
 struct SmallWidgetView: View {
     let entry: ShuttleEntry

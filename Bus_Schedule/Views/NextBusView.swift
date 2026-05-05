@@ -1,4 +1,5 @@
 import SwiftUI
+import BusScheduleCore
 
 struct NextBusView: View {
     let location: Location

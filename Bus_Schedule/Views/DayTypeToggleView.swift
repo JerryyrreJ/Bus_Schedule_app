@@ -1,4 +1,5 @@
 import SwiftUI
+import BusScheduleCore
 
 struct DayTypeToggleView: View {
     @Binding var dayType: DayType

@@ -9,6 +9,7 @@
 
 import SwiftUI
 import AppIntents
+import BusScheduleCore
 
 struct OverrideChip: View {
     let dayType: DayType

@@ -10,6 +10,7 @@
 
 import WidgetKit
 import SwiftUI
+import BusScheduleCore
 
 // MARK: - Rectangular (the recommended default)
 

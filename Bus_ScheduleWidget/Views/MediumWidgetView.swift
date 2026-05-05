@@ -12,6 +12,7 @@
 
 import SwiftUI
 import WidgetKit
+import BusScheduleCore
 
 struct MediumWidgetView: View {
     let entry: ShuttleEntry
