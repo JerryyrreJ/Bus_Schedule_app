@@ -127,7 +127,7 @@ struct SmallWidgetView: View {
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            ContainerRelativeShape()
                 .fill(Color.green.opacity(0.16))
         )
     }

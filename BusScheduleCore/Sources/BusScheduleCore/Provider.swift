@@ -67,7 +67,7 @@ public struct ShuttleProvider: TimelineProvider {
         let resolved = DayType.effective(for: date)
         return ShuttleEntry(
             date: date,
-            primaryRoute: .phIINewCampus,
+            primaryRoute: SharedStore.readPrimaryRoute(),
             dayType: resolved.dayType,
             isManualOverride: resolved.isManualOverride
         )

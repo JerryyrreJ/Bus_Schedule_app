@@ -12,15 +12,10 @@
 //
 
 import SwiftUI
-import WidgetKit
 import BusScheduleCore
 
 struct WatchContentView: View {
-    /// User's preferred route on this device. Stored in App Group UserDefaults
-    /// (local only — route preference is per-device by design).
-    @AppStorage("primaryRoute", store: SharedStore.localDefaults)
-    private var primaryRoute: Location = .phIINewCampus
-
+    @State private var primaryRoute: Location = SharedStore.readPrimaryRoute()
     @State private var dayType: DayType = .weekday
     @Environment(\.scenePhase) private var scenePhase
 
@@ -29,10 +24,17 @@ struct WatchContentView: View {
             content(at: context.date)
         }
         .containerBackground(.fill.tertiary, for: .navigation)
-        .onAppear { applyEffectiveDayType() }
+        .onAppear {
+            applyRoutePreference()
+            applyEffectiveDayType()
+        }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
+            applyRoutePreference()
             applyEffectiveDayType()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .primaryRouteDidChange)) { _ in
+            applyRoutePreference()
         }
         .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange)) { _ in
             applyEffectiveDayType()
@@ -286,12 +288,18 @@ struct WatchContentView: View {
     }
 
     private func swap() {
-        primaryRoute = WidgetTheme.opposite(of: primaryRoute)
+        let newRoute = WidgetTheme.opposite(of: primaryRoute)
+        primaryRoute = newRoute
+        SharedStore.writePrimaryRoute(newRoute)
     }
 
     private func applyEffectiveDayType(referenceDate: Date = Date()) {
         SharedStore.selfHealOverride(for: referenceDate)
         dayType = DayType.effective(for: referenceDate).dayType
+    }
+
+    private func applyRoutePreference() {
+        primaryRoute = SharedStore.readPrimaryRoute()
     }
 }
 

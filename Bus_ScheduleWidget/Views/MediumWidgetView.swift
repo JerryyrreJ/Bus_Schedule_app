@@ -83,7 +83,10 @@ struct MediumWidgetView: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            // ContainerRelativeShape — auto-computes a corner radius that's
+            // concentric with the widget's outer corner. Works on any iPhone
+            // (different models have different widget container radii).
+            ContainerRelativeShape()
                 .fill(Color.primary.opacity(0.04))
         )
     }
@@ -274,7 +277,7 @@ struct MediumWidgetView: View {
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            ContainerRelativeShape()
                 .fill(Color.primary.opacity(0.04))
         )
     }

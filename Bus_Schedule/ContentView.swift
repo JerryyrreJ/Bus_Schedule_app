@@ -7,13 +7,22 @@
 
 import SwiftUI
 import UIKit
-import WidgetKit
 import BusScheduleCore
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
-    @State private var location: Location = .phIINewCampus
+    @State private var location: Location = SharedStore.readPrimaryRoute()
     @State private var dayType: DayType = .weekday
+
+    private var locationBinding: Binding<Location> {
+        Binding(
+            get: { location },
+            set: { newValue in
+                location = newValue
+                SharedStore.writePrimaryRoute(newValue)
+            }
+        )
+    }
 
     private var dayTypeBinding: Binding<DayType> {
         Binding(
@@ -24,7 +33,6 @@ struct ContentView: View {
                 // SharedStore writes to App Group UserDefaults and republishes
                 // the latest state to the paired Watch.
                 SharedStore.writeOverride(newValue == auto ? nil : newValue)
-                WidgetCenter.shared.reloadAllTimelines()
             }
         )
     }
@@ -39,7 +47,7 @@ struct ContentView: View {
                 .padding(.top, 24)
                 .padding(.horizontal, 24)
 
-            LocationToggleView(location: $location)
+            LocationToggleView(location: locationBinding)
                 .padding(.top, 24)
                 .padding(.horizontal, 20)
 
@@ -56,14 +64,19 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(uiColor: .systemBackground))
         .onAppear {
+            applyRoutePreference()
             applyEffectiveDayType()
         }
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
+            applyRoutePreference()
             applyEffectiveDayType()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             applyEffectiveDayType()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .primaryRouteDidChange)) { _ in
+            applyRoutePreference()
         }
         .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange)) { _ in
             // Fired when a synced override arrives from the counterpart device.
@@ -92,6 +105,10 @@ struct ContentView: View {
     private func applyEffectiveDayType(referenceDate: Date = Date()) {
         SharedStore.selfHealOverride(for: referenceDate)
         dayType = DayType.effective(for: referenceDate).dayType
+    }
+
+    private func applyRoutePreference() {
+        location = SharedStore.readPrimaryRoute()
     }
 }
 
