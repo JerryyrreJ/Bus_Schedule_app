@@ -7,19 +7,32 @@
 
 import SwiftUI
 import UIKit
+import WidgetKit
 
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var location: Location = .phIINewCampus
     @State private var dayType: DayType = .weekday
-    @State private var followsAutomaticDayType = true
+
+    /// Persisted manual override of the day type. Empty string means "follow auto".
+    /// Stored in the App Group suite so the main app and the Widget extension
+    /// share the same value.
+    @AppStorage("dayTypeOverride", store: SharedStore.defaults)
+    private var dayTypeOverrideRaw: String = ""
 
     private var dayTypeBinding: Binding<DayType> {
         Binding(
             get: { dayType },
             set: { newValue in
+                let auto = DayType.automatic(for: Date())
                 dayType = newValue
-                followsAutomaticDayType = newValue == Self.automaticDayType(for: Date())
+                // If the user picks the auto-detected value, clear the override so
+                // the chip flips back to "Auto · …". Otherwise persist the manual
+                // selection so it survives across launches.
+                dayTypeOverrideRaw = (newValue == auto) ? "" : newValue.rawValue
+                // Tell WidgetKit to refresh: a chip change should propagate to the
+                // home/lock-screen widgets immediately.
+                WidgetCenter.shared.reloadAllTimelines()
             }
         )
     }
@@ -51,14 +64,14 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(uiColor: .systemBackground))
         .onAppear {
-            syncDayTypeWithCurrentDate()
+            applyEffectiveDayType()
         }
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
-            syncDayTypeWithCurrentDate()
+            applyEffectiveDayType()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
-            syncDayTypeWithCurrentDate()
+            applyEffectiveDayType()
         }
     }
 
@@ -76,22 +89,17 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func syncDayTypeWithCurrentDate(referenceDate: Date = Date()) {
-        guard followsAutomaticDayType else { return }
-        dayType = Self.automaticDayType(for: referenceDate)
+    /// Resolve the effective day type from (persisted override) → (auto for today).
+    /// Self-heal: if the override now matches what auto-detection would return,
+    /// clear it so the chip naturally flips back to "Auto · …".
+    private func applyEffectiveDayType(referenceDate: Date = Date()) {
+        SharedStore.selfHealOverride(for: referenceDate)
+        let resolved = DayType.effective(for: referenceDate)
+        dayType = resolved.dayType
     }
 
     private static func automaticDayType(for date: Date) -> DayType {
-        let weekday = Calendar.current.component(.weekday, from: date)
-
-        switch weekday {
-        case 7:
-            return .saturday
-        case 1:
-            return .sundayOrHoliday
-        default:
-            return .weekday
-        }
+        DayType.automatic(for: date)
     }
 }
 

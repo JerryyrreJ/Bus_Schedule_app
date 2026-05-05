@@ -5,7 +5,7 @@ enum Location {
     case phIParkingLot
 }
 
-enum DayType {
+enum DayType: String, CaseIterable {
     case weekday
     case saturday
     case sundayOrHoliday
@@ -66,7 +66,7 @@ struct Schedule {
     static let saturday: [BusTime] = [
         BusTime(id: 1, phII: "07:40", phI: "08:00"),
         BusTime(id: 2, phII: "08:10", phI: "08:30"),
-        BusTime(id: 3, phII: "08:20", phI: "08:30"),
+        BusTime(id: 3, phII: "08:20", phI: ""),
         BusTime(id: 4, phII: "08:40", phI: "09:00"),
         BusTime(id: 5, phII: "09:10", phI: "09:30"),
         BusTime(id: 6, phII: "09:40", phI: "10:00"),
@@ -218,7 +218,7 @@ struct Schedule {
         return false
     }
 
-    private static func secondsFromTimeString(_ timeString: String) -> Int? {
+    static func secondsFromTimeString(_ timeString: String) -> Int? {
         let components = timeString.split(separator: ":")
 
         guard components.count == 2,

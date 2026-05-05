@@ -1,1 +1,35 @@
+# ===== macOS =====
+.DS_Store
+
+# ===== Xcode (per-user state) =====
+# Scheme management, breakpoints, snapshots — never share these
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+
+# ===== Xcode build outputs =====
+DerivedData/
+build/
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# ===== Swift Package Manager =====
+.build/
+.swiftpm/
+Package.resolved
+
+# ===== Local design assets =====
 design/
+
+# ===== AI assistant config files (per-user, not project state) =====
+agent.md
+AGENT.md
+agents.md
+AGENTS.md
+claude.md
+CLAUDE.md
+gemini.md
+GEMINI.md
+.claude/

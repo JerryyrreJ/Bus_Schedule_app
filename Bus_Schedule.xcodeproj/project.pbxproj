@@ -6,14 +6,79 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3F8823E32FA9E3350070C89C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E22FA9E3350070C89C /* WidgetKit.framework */; };
+		3F8823E52FA9E3350070C89C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8823E42FA9E3350070C89C /* SwiftUI.framework */; };
+		3F8823F22FA9E3370070C89C /* Bus_ScheduleWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3F8823F02FA9E3370070C89C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F735EC82CE1BE3700C1BB86 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F8823DF2FA9E3350070C89C;
+			remoteInfo = Bus_ScheduleWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3F8823F72FA9E3370070C89C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3F8823F22FA9E3370070C89C /* Bus_ScheduleWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bus_Schedule.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Bus_ScheduleWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F8823E22FA9E3350070C89C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		3F8823E42FA9E3350070C89C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bus_ScheduleWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3F8823F32FA9E3370070C89C /* Exceptions for "Bus_ScheduleWidget" folder in "Bus_ScheduleWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
+		};
+		3F88240B2FA9E6230070C89C /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Intents/ToggleDayTypeIntent.swift,
+				Models/Types.swift,
+				Shared/ScheduleQueries.swift,
+				Shared/SharedStore.swift,
+			);
+			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F88240B2FA9E6230070C89C /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */,
+			);
 			path = Bus_Schedule;
+			sourceTree = "<group>";
+		};
+		3F8823E62FA9E3350070C89C /* Bus_ScheduleWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F8823F32FA9E3370070C89C /* Exceptions for "Bus_ScheduleWidget" folder in "Bus_ScheduleWidgetExtension" target */,
+			);
+			path = Bus_ScheduleWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +91,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F8823DD2FA9E3350070C89C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3F8823E52FA9E3350070C89C /* SwiftUI.framework in Frameworks */,
+				3F8823E32FA9E3350070C89C /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		3F735EC72CE1BE3700C1BB86 = {
 			isa = PBXGroup;
 			children = (
+				3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */,
 				3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */,
+				3F8823E62FA9E3350070C89C /* Bus_ScheduleWidget */,
+				3F8823E12FA9E3350070C89C /* Frameworks */,
 				3F735ED12CE1BE3700C1BB86 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +118,18 @@
 			isa = PBXGroup;
 			children = (
 				3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */,
+				3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3F8823E12FA9E3350070C89C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3F8823E22FA9E3350070C89C /* WidgetKit.framework */,
+				3F8823E42FA9E3350070C89C /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +142,12 @@
 				3F735ECC2CE1BE3700C1BB86 /* Sources */,
 				3F735ECD2CE1BE3700C1BB86 /* Frameworks */,
 				3F735ECE2CE1BE3700C1BB86 /* Resources */,
+				3F8823F72FA9E3370070C89C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3F8823F12FA9E3370070C89C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */,
@@ -70,6 +159,28 @@
 			productReference = 3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3F8823F42FA9E3370070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWidgetExtension" */;
+			buildPhases = (
+				3F8823DC2FA9E3350070C89C /* Sources */,
+				3F8823DD2FA9E3350070C89C /* Frameworks */,
+				3F8823DE2FA9E3350070C89C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3F8823E62FA9E3350070C89C /* Bus_ScheduleWidget */,
+			);
+			name = Bus_ScheduleWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = Bus_ScheduleWidgetExtension;
+			productReference = 3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -77,11 +188,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					3F735ECF2CE1BE3700C1BB86 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					3F8823DF2FA9E3350070C89C = {
+						CreatedOnToolsVersion = 26.4;
 					};
 				};
 			};
@@ -100,12 +214,20 @@
 			projectRoot = "";
 			targets = (
 				3F735ECF2CE1BE3700C1BB86 /* Bus_Schedule */,
+				3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		3F735ECE2CE1BE3700C1BB86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F8823DE2FA9E3350070C89C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +244,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3F8823DC2FA9E3350070C89C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3F8823F12FA9E3370070C89C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
+			targetProxy = 3F8823F02FA9E3370070C89C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F735EDD2CE1BE3800C1BB86 /* Debug */ = {
@@ -317,6 +454,73 @@
 			};
 			name = Release;
 		};
+		3F8823F52FA9E3370070C89C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Bus_ScheduleWidget/Bus_ScheduleWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Bus_ScheduleWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.Bus-ScheduleWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3F8823F62FA9E3370070C89C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = Bus_ScheduleWidget/Bus_ScheduleWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3JX7MT92C7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Bus_ScheduleWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule.Bus-ScheduleWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -334,6 +538,15 @@
 			buildConfigurations = (
 				3F735EE02CE1BE3800C1BB86 /* Debug */,
 				3F735EE12CE1BE3800C1BB86 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3F8823F42FA9E3370070C89C /* Build configuration list for PBXNativeTarget "Bus_ScheduleWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F8823F52FA9E3370070C89C /* Debug */,
+				3F8823F62FA9E3370070C89C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
