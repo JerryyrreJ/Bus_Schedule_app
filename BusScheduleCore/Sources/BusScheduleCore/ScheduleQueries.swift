@@ -86,6 +86,31 @@ public extension Schedule {
     ) -> Int {
         max(0, departureSecondsFromMidnight - currentSecondsFromMidnight)
     }
+
+    /// Seconds-from-midnight of the most recent departure that has already left
+    /// today, for the given location. Returns `nil` if no bus has left yet
+    /// (i.e., we're before the day's first departure). "Return Immediately"
+    /// rows are skipped.
+    ///
+    /// Used to render the wait-progress bar: progress goes from 0 right after
+    /// the previous bus leaves to 1 as the next bus arrives.
+    static func previousDepartureSeconds(
+        for location: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int
+    ) -> Int? {
+        var lastSeen: Int? = nil
+        for busTime in getCurrentSchedule(dayType) {
+            let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
+            guard timeString != "Return Immediately",
+                  let s = secondsFromTimeString(timeString),
+                  s <= currentSecondsFromMidnight else {
+                continue
+            }
+            lastSeen = s
+        }
+        return lastSeen
+    }
 }
 
 public enum CountdownFormatter {

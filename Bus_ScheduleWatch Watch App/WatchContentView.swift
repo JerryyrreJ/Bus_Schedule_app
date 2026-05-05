@@ -51,6 +51,12 @@ struct WatchContentView: View {
         VStack(alignment: .leading, spacing: 0) {
             routeHeader
 
+            // Top spacer — together with the bottom Spacer inside each block,
+            // forms a two-spring layout that adapts to any watch size.
+            // 41mm: both shrink to minLength. 49mm Ultra: both grow.
+            // No font/padding tweaking needed across devices.
+            Spacer(minLength: 4)
+
             switch state {
             case let .scheduled(time, departureSeconds):
                 scheduledBlock(
@@ -69,21 +75,32 @@ struct WatchContentView: View {
 
     private var routeHeader: some View {
         Button(action: swap) {
-            HStack(spacing: 5) {
+            HStack(spacing: 7) {
+                // Semantic fonts (.headline / .subheadline) — auto-scale across
+                // 41mm → 49mm Ultra and follow Dynamic Type. No hard-coded pt.
                 Image(systemName: WidgetTheme.busSymbol)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(.secondary)
                 Text(WidgetTheme.routeLabel(for: primaryRoute))
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.headline)
+                    .fontDesign(.rounded)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Spacer(minLength: 4)
+                // Swap affordance — bigger circular bg + clearer icon.
+                // The whole row is the hit target (contentShape below).
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .frame(width: 30, height: 30)
+                    .background(Color.white.opacity(0.10), in: Circle())
             }
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+            // Force the entire frame to be hit-testable — without this,
+            // taps on the Spacer's empty space fall through.
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -98,6 +115,8 @@ struct WatchContentView: View {
             currentSecondsFromMidnight: currentSeconds,
             limit: 2
         )
+        let progress = waitProgress(currentSeconds: currentSeconds, departureSeconds: departureSeconds)
+        let barColor = WidgetTheme.countdownColor(for: urgency, location: primaryRoute)
 
         // Hero: big departure time — fills the full width.
         Text(time)
@@ -110,39 +129,86 @@ struct WatchContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 6)
 
+        // Hairline progress bar — fills as the next bus approaches.
+        // Animated for smooth visual update on TimelineView ticks.
+        progressBar(progress: progress, color: barColor)
+            .padding(.top, 4)
+            .padding(.bottom, 2)
+
         // Countdown — second focal point, baseline-aligned for tight visual.
+        // Semantic fonts so it scales with watch size + Dynamic Type.
         HStack(alignment: .firstTextBaseline, spacing: 5) {
             Text(urgency == .critical ? "Departing in" : "Leaves in")
-                .font(.system(size: 12))
+                .font(.footnote)
                 .foregroundStyle(.secondary)
             Text(CountdownFormatter.string(forSeconds: remaining))
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: primaryRoute))
+                .font(.title3.weight(.heavy).monospacedDigit())
+                .fontDesign(.rounded)
+                .foregroundStyle(barColor)
         }
-        .padding(.top, 2)
 
-        // Push the THEN row to the bottom of the screen.
+        // Push the chips to the bottom of the screen.
         Spacer(minLength: 6)
 
         if !upcoming.isEmpty {
-            Divider()
-                .opacity(0.25)
-                .padding(.bottom, 5)
+            upcomingChips(times: upcoming)
+        }
+    }
 
-            HStack(spacing: 6) {
-                Text("THEN")
-                    .font(.system(size: 10, weight: .heavy))
-                    .tracking(1.2)
-                    .foregroundStyle(.tertiary)
-                Text(upcoming.joined(separator: "  ·  "))
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Spacer(minLength: 0)
+    /// Fraction in [0, 1] describing how far we are between the previous
+    /// departure and the next one. If there is no previous departure today
+    /// (we're before the first bus), falls back to a 30-minute imminence
+    /// scale so the bar still has meaning.
+    private func waitProgress(currentSeconds: Int, departureSeconds: Int) -> Double {
+        if let prev = Schedule.previousDepartureSeconds(
+            for: primaryRoute,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSeconds
+        ), departureSeconds > prev {
+            let total = Double(departureSeconds - prev)
+            let elapsed = Double(currentSeconds - prev)
+            return min(1, max(0, elapsed / total))
+        }
+        // Fallback: imminence over a 30-minute window.
+        let remaining = Double(max(0, departureSeconds - currentSeconds))
+        return min(1, max(0, 1 - remaining / 1800))
+    }
+
+    @ViewBuilder
+    private func progressBar(progress: Double, color: Color) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.08))
+                Capsule()
+                    .fill(color)
+                    .frame(width: max(2, geo.size.width * CGFloat(progress)))
+                    .animation(.easeOut(duration: 0.6), value: progress)
             }
+        }
+        .frame(height: 3)
+    }
+
+    @ViewBuilder
+    private func upcomingChips(times: [String]) -> some View {
+        HStack(spacing: 5) {
+            Text("THEN")
+                .font(.caption2.weight(.heavy))
+                .tracking(1.2)
+                .foregroundStyle(.tertiary)
+                .padding(.trailing, 1)
+
+            ForEach(times, id: \.self) { time in
+                Text(time)
+                    .font(.footnote.weight(.semibold).monospacedDigit())
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.10), in: Capsule())
+            }
+
+            Spacer(minLength: 0)
         }
     }
 
