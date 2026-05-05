@@ -23,50 +23,57 @@ struct ContentView: View {
             }
         )
     }
-    
+
+    private var routeLabel: String {
+        location == .phIINewCampus ? "Phase II → Phase I" : "Phase I → Phase II"
+    }
+
     var body: some View {
-        VStack(spacing: 50) {
-            // 标题部分
-            VStack(spacing: 12) {
-                Image(systemName: "bus.fill")
-                    .font(.system(size: 35))
-                    .foregroundColor(location == .phIINewCampus ? .green : .blue)
-                
-                Text("Campus Shuttle \nSchedule")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-                
-                Text("Real-time bus departure information\nbetween campuses")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top, 55)
-            
-            // 位置切换
+        VStack(spacing: 0) {
+            header
+                .padding(.top, 24)
+                .padding(.horizontal, 24)
+
             LocationToggleView(location: $location)
-                .padding(.horizontal)
-            
-            // 下一班车信息
+                .padding(.top, 24)
+                .padding(.horizontal, 20)
+
             NextBusView(location: location, dayType: dayType)
-                .padding(.horizontal)
-            
-            // 日期类型切换
+                .padding(.top, 40)
+                .padding(.horizontal, 24)
+
+            Spacer(minLength: 24)
+
             DayTypeToggleView(dayType: dayTypeBinding)
-            
-            Spacer()
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(uiColor: .systemBackground))
         .onAppear {
             syncDayTypeWithCurrentDate()
         }
-        .onChange(of: scenePhase) { oldValue, newValue in
+        .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             syncDayTypeWithCurrentDate()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             syncDayTypeWithCurrentDate()
         }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Campus Shuttle")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.secondary)
+
+            Text(routeLabel)
+                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+                .animation(.easeInOut(duration: 0.25), value: location)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func syncDayTypeWithCurrentDate(referenceDate: Date = Date()) {
@@ -88,7 +95,6 @@ struct ContentView: View {
     }
 }
 
-// 预览
 #Preview {
     ContentView()
 }

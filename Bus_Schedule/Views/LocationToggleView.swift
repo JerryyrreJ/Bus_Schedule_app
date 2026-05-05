@@ -2,64 +2,76 @@ import SwiftUI
 
 struct LocationToggleView: View {
     @Binding var location: Location
-    
-    // 创建震动反馈生成器
-    private let feedback = UIImpactFeedbackGenerator(style: .medium)
-    
+
+    private var accentColor: Color {
+        location == .phIINewCampus ? .green : .blue
+    }
+
     var body: some View {
-        VStack(spacing: 24) {
-            Text("Select Your Location")
-                .font(.headline)
-                .foregroundColor(.gray)
-            
-            HStack(spacing: 16) {
-                LocationButton(
-                    title: "Phase II",
-                    isSelected: location == .phIINewCampus,
-                    color: .green
-                ) {
-                    feedback.impactOccurred() // 触发震动
-                    location = .phIINewCampus
-                }
-                
-                LocationButton(
-                    title: "Phase I",
-                    isSelected: location == .phIParkingLot,
-                    color: .blue
-                ) {
-                    feedback.impactOccurred() // 触发震动
-                    location = .phIParkingLot
-                }
+        ZStack {
+            GeometryReader { proxy in
+                let segmentWidth = proxy.size.width / 2
+                let xOffset = location == .phIINewCampus ? 0 : segmentWidth
+
+                Capsule()
+                    .fill(accentColor)
+                    .frame(width: segmentWidth - 8, height: proxy.size.height - 8)
+                    .offset(x: xOffset + 4, y: 4)
+                    .shadow(color: accentColor.opacity(0.35), radius: 8, x: 0, y: 2)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.85), value: location)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 16)
+
+            HStack(spacing: 0) {
+                segmentButton(title: "Phase II", target: .phIINewCampus)
+                segmentButton(title: "Phase I", target: .phIParkingLot)
+            }
+        }
+        .frame(height: 52)
+        .background(glassBackground)
+        .clipShape(Capsule())
+        .sensoryFeedback(.impact(weight: .medium), trigger: location)
+    }
+
+    @ViewBuilder
+    private var glassBackground: some View {
+        if #available(iOS 26.0, *) {
+            Capsule()
+                .fill(.clear)
+                .glassEffect(.regular, in: Capsule())
+        } else {
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Capsule()
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.6), Color.white.opacity(0.1)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 1
+                        )
+                )
         }
     }
-}
 
-struct LocationButton: View {
-    let title: String
-    let isSelected: Bool
-    let color: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: "bus.fill")
-                    .foregroundColor(isSelected ? .white : color)
-                Text(title)
+    private func segmentButton(title: String, target: Location) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                location = target
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 18)
-            .background(isSelected ? color : Color.gray.opacity(0.1))
-            .foregroundColor(isSelected ? .white : .gray)
-            .cornerRadius(8)
+        } label: {
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(location == target ? .white : .secondary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 
 #Preview {
     LocationToggleView(location: .constant(.phIINewCampus))
-} 
+        .padding()
+}

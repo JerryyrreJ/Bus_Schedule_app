@@ -170,6 +170,32 @@ struct Schedule {
         return .noMoreBuses
     }
 
+    static func upcomingDepartures(
+        for location: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int,
+        limit: Int = 3
+    ) -> [String] {
+        let schedule = getCurrentSchedule(dayType)
+        var results: [String] = []
+
+        for busTime in schedule {
+            let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
+
+            guard let departureSeconds = secondsFromTimeString(timeString),
+                  departureSeconds > currentSecondsFromMidnight else {
+                continue
+            }
+
+            results.append(timeString)
+            if results.count >= limit + 1 {
+                break
+            }
+        }
+
+        return results.count > 1 ? Array(results.dropFirst().prefix(limit)) : []
+    }
+
     private static func isReturnImmediatelyActive(
         in schedule: [BusTime],
         currentSecondsFromMidnight: Int
