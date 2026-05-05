@@ -4,44 +4,30 @@ struct NextBusView: View {
     let location: Location
     let dayType: DayType
 
-    @State private var nextDeparture: String = ""
-    @State private var arrivalTime: String = ""
-    @State private var countdownText: String = ""
-    @State private var progressValue: Double = 0
-    @State private var upcoming: [String] = []
-    @State private var isReturnImmediately: Bool = false
-    @State private var isNoMoreBuses: Bool = false
     @State private var showTooltip: Bool = false
-    @State private var timer: Timer? = nil
 
     private var accentColor: Color {
         location == .phIINewCampus ? .green : .blue
     }
 
     var body: some View {
-        VStack(spacing: 36) {
-            heroBlock
-            if !isReturnImmediately && !isNoMoreBuses {
-                countdownBlock
-                upcomingBlock
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let state = displayState(referenceDate: context.date)
+
+            VStack(spacing: 36) {
+                heroBlock(state: state)
+                if !state.isReturnImmediately && !state.isNoMoreBuses {
+                    countdownBlock(state: state)
+                    upcomingBlock(state: state)
+                }
             }
-        }
-        .frame(maxWidth: .infinity)
-        .onAppear {
-            refreshState()
-            startTimer()
-        }
-        .onChange(of: location) { _, _ in refreshState() }
-        .onChange(of: dayType) { _, _ in refreshState() }
-        .onDisappear {
-            timer?.invalidate()
-            timer = nil
+            .frame(maxWidth: .infinity)
         }
     }
 
     // MARK: - Hero
 
-    private var heroBlock: some View {
+    private func heroBlock(state: DisplayState) -> some View {
         VStack(spacing: 6) {
             Text("Next Departure")
                 .font(.system(size: 11, weight: .semibold))
@@ -49,31 +35,19 @@ struct NextBusView: View {
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
 
-            if isReturnImmediately {
+            if state.isReturnImmediately {
                 returnImmediatelyHero
-            } else if isNoMoreBuses {
+            } else if state.isNoMoreBuses {
                 Text("No more buses today")
                     .font(.system(size: 28, weight: .semibold, design: .rounded))
                     .foregroundColor(.secondary)
                     .padding(.top, 12)
             } else {
-                Text(nextDeparture)
+                Text(state.nextDeparture)
                     .font(.system(size: 88, weight: .ultraLight, design: .rounded))
                     .monospacedDigit()
                     .kerning(-2)
                     .foregroundColor(.primary)
-
-                if !arrivalTime.isEmpty {
-                    HStack(spacing: 4) {
-                        Text("Arriving")
-                        Text(arrivalTime)
-                            .monospacedDigit()
-                            .foregroundColor(.primary.opacity(0.85))
-                            .fontWeight(.medium)
-                    }
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                }
             }
         }
     }
@@ -103,14 +77,14 @@ struct NextBusView: View {
 
     // MARK: - Countdown
 
-    private var countdownBlock: some View {
+    private func countdownBlock(state: DisplayState) -> some View {
         VStack(spacing: 10) {
             HStack {
                 Text("Time Left")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.secondary)
                 Spacer()
-                Text(countdownText)
+                Text(state.countdownText)
                     .font(.system(size: 19, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundColor(accentColor)
@@ -128,8 +102,8 @@ struct NextBusView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: proxy.size.width * progressValue)
-                        .animation(.linear(duration: 0.8), value: progressValue)
+                        .frame(width: proxy.size.width * state.progressValue)
+                        .animation(.linear(duration: 0.8), value: state.progressValue)
                 }
             }
             .frame(height: 6)
@@ -139,7 +113,7 @@ struct NextBusView: View {
 
     // MARK: - Upcoming
 
-    private var upcomingBlock: some View {
+    private func upcomingBlock(state: DisplayState) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Upcoming")
                 .font(.system(size: 11, weight: .semibold))
@@ -149,27 +123,27 @@ struct NextBusView: View {
                 .padding(.leading, 4)
 
             HStack(spacing: 0) {
-                ForEach(Array(upcoming.enumerated()), id: \.offset) { index, time in
+                ForEach(Array(state.upcoming.enumerated()), id: \.offset) { index, time in
                     VStack(spacing: 2) {
                         Text(time)
                             .font(.system(size: 18, weight: .medium, design: .rounded))
                             .monospacedDigit()
                             .foregroundColor(.primary)
-                        Text(relativeLabel(for: index))
+                        Text(relativeLabel(for: index, state: state))
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
 
-                    if index < upcoming.count - 1 {
+                    if index < state.upcoming.count - 1 {
                         Rectangle()
                             .fill(Color.secondary.opacity(0.15))
                             .frame(width: 1, height: 28)
                     }
                 }
 
-                if upcoming.isEmpty {
+                if state.upcoming.isEmpty {
                     Text("—")
                         .font(.system(size: 16))
                         .foregroundColor(.secondary)
@@ -184,34 +158,20 @@ struct NextBusView: View {
         }
     }
 
-    private func relativeLabel(for index: Int) -> String {
-        guard let nextSeconds = secondsFromTimeString(nextDeparture),
-              let thisSeconds = secondsFromTimeString(upcoming[index]) else {
+    private func relativeLabel(for index: Int, state: DisplayState) -> String {
+        guard let nextSeconds = secondsFromTimeString(state.nextDeparture),
+              let thisSeconds = secondsFromTimeString(state.upcoming[index]) else {
             return ""
         }
+
         let diffMinutes = max(0, (thisSeconds - nextSeconds) / 60)
         return "+\(diffMinutes)m"
     }
 
-    // MARK: - State refresh
+    // MARK: - State
 
-    private func startTimer() {
-        guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            refreshState()
-        }
-    }
-
-    private func refreshState(referenceDate: Date = Date()) {
+    private func displayState(referenceDate: Date) -> DisplayState {
         let currentSeconds = secondsFromMidnight(for: referenceDate)
-
-        isReturnImmediately = false
-        isNoMoreBuses = false
-        nextDeparture = ""
-        arrivalTime = ""
-        countdownText = ""
-        progressValue = 0
-        upcoming = []
 
         switch Schedule.nextDepartureState(
             for: location,
@@ -219,42 +179,30 @@ struct NextBusView: View {
             currentSecondsFromMidnight: currentSeconds
         ) {
         case .returnImmediately:
-            isReturnImmediately = true
+            return DisplayState(isReturnImmediately: true)
 
         case .scheduled(let time, let departureSecondsFromMidnight):
-            nextDeparture = time
-            arrivalTime = computedArrival(forDeparture: time)
-            countdownText = countdownString(
-                until: departureSecondsFromMidnight,
-                from: currentSeconds
-            )
-            progressValue = computedProgress(
-                until: departureSecondsFromMidnight,
-                from: currentSeconds
-            )
-            upcoming = Schedule.upcomingDepartures(
-                for: location,
-                dayType: dayType,
-                currentSecondsFromMidnight: currentSeconds,
-                limit: 3
+            return DisplayState(
+                nextDeparture: time,
+                countdownText: countdownString(
+                    until: departureSecondsFromMidnight,
+                    from: currentSeconds
+                ),
+                progressValue: computedProgress(
+                    until: departureSecondsFromMidnight,
+                    from: currentSeconds
+                ),
+                upcoming: Schedule.upcomingDepartures(
+                    for: location,
+                    dayType: dayType,
+                    currentSecondsFromMidnight: currentSeconds,
+                    limit: 3
+                )
             )
 
         case .noMoreBuses:
-            isNoMoreBuses = true
+            return DisplayState(isNoMoreBuses: true)
         }
-    }
-
-    private func computedArrival(forDeparture time: String) -> String {
-        // Phase II → Phase I 是一段路程；从 schedule 模型里查对应 BusTime
-        let schedule = Schedule.getCurrentSchedule(dayType)
-        if let match = schedule.first(where: { busTime in
-            (location == .phIINewCampus && busTime.phII == time) ||
-            (location == .phIParkingLot && busTime.phI == time)
-        }) {
-            let other = location == .phIINewCampus ? match.phI : match.phII
-            return other == "Return Immediately" ? "" : other
-        }
-        return ""
     }
 
     private func secondsFromMidnight(for date: Date) -> Int {
@@ -285,13 +233,21 @@ struct NextBusView: View {
         return "\(hours)h \(minutes)m"
     }
 
-    // 进度条：以 30 分钟为参考窗口，随等待时间线性增长，封顶 1.0
     private func computedProgress(until departureSeconds: Int, from currentSeconds: Int) -> Double {
         let remaining = Double(max(0, departureSeconds - currentSeconds))
         let referenceWindow: Double = 30 * 60
         let elapsed = max(0, referenceWindow - remaining)
         return min(1.0, elapsed / referenceWindow)
     }
+}
+
+private struct DisplayState {
+    var nextDeparture: String = ""
+    var countdownText: String = ""
+    var progressValue: Double = 0
+    var upcoming: [String] = []
+    var isReturnImmediately: Bool = false
+    var isNoMoreBuses: Bool = false
 }
 
 #Preview {
