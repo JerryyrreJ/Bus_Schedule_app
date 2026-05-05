@@ -4,10 +4,10 @@
 //
 //  Dual-route medium widget (per design doc Section 3):
 //    • Header with bus icon, "Campus Shuttle" label, and override chip (right)
-//    • Primary card (left, ~60%): full route, big time, countdown, two upcoming
-//    • Secondary stack (right, ~40%): opposite-direction next + then-after
-//  Falls back to a "Service ended" layout that includes both directions when
-//  the primary route has no more buses today.
+//    • Primary card (left, ~60%): route line, big time + countdown stacked,
+//      and a small footer ("Then 17:40 · 18:10")
+//    • Secondary stack (right, ~40%): opposite-direction next + then-after,
+//      both cards expand equally to fill widget height
 //
 
 import SwiftUI
@@ -35,10 +35,12 @@ struct MediumWidgetView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             header
             mainGrid
+                .frame(maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     // MARK: Header
@@ -56,45 +58,55 @@ struct MediumWidgetView: View {
         }
     }
 
-    // MARK: Body grid
+    // MARK: Body grid — both columns fill the available height equally
 
     private var mainGrid: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 8) {
             primaryCard
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             secondaryStack
-                .frame(width: 132)
+                .frame(width: 128, alignment: .top)
         }
     }
 
-    // MARK: Primary (left)
+    // MARK: Primary card (left)
 
     private var primaryCard: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("PRIMARY")
-                .font(.system(size: 9, weight: .heavy))
-                .tracking(1.2)
-                .foregroundStyle(.secondary)
-            Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
+        VStack(alignment: .leading, spacing: 0) {
+            routeLine
+            Spacer(minLength: 4)
             primaryHeadline
-                .padding(.top, 2)
-
             Spacer(minLength: 4)
             primaryFooter
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.primary.opacity(0.04))
         )
     }
 
+    private var routeLine: some View {
+        HStack(spacing: 4) {
+            Text("PRIMARY")
+                .font(.system(size: 9, weight: .heavy))
+                .tracking(0.8)
+                .foregroundStyle(.secondary)
+            Text("·")
+                .font(.system(size: 9, weight: .heavy))
+                .foregroundStyle(.tertiary)
+            Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+    }
+
+    /// Big time stacked vertically with a small "Leaves in 12m" row beneath.
+    /// Vertical layout ensures the big number never has to share width with the
+    /// countdown — fixes the truncation issue from v1.
     @ViewBuilder
     private var primaryHeadline: some View {
         switch primaryState {
@@ -104,17 +116,25 @@ struct MediumWidgetView: View {
                 from: entry.currentSecondsFromMidnight
             )
             let urgency = WidgetUrgency.from(secondsRemaining: remaining)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(time)
                     .font(.system(size: 36, weight: WidgetTheme.bigTimeWeight(for: urgency), design: .rounded))
                     .monospacedDigit()
                     .kerning(-1.0)
                     .foregroundStyle(urgency == .critical ? Color.red : Color.primary)
-                Spacer()
-                Text(CountdownFormatter.string(forSeconds: remaining))
-                    .font(.system(size: 16, weight: .heavy, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: entry.primaryRoute))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(urgency == .critical ? "Departing in" : "Leaves in")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                    Text(CountdownFormatter.string(forSeconds: remaining))
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: entry.primaryRoute))
+                }
             }
 
         case .returnImmediately:
@@ -142,14 +162,13 @@ struct MediumWidgetView: View {
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
                 if let first = Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextDay.dayType) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("FIRST TOMORROW")
                             .font(.system(size: 8, weight: .heavy))
-                            .tracking(1.0)
+                            .tracking(0.8)
                             .foregroundStyle(.secondary)
-                        Spacer()
                         Text(first)
-                            .font(.system(size: 26, weight: .ultraLight, design: .rounded))
+                            .font(.system(size: 24, weight: .ultraLight, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.primary)
                     }
@@ -169,32 +188,33 @@ struct MediumWidgetView: View {
                 limit: 2
             )
             if !upcoming.isEmpty {
-                HStack {
+                HStack(spacing: 4) {
                     Text("Then")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
-                    Spacer()
                     Text(upcoming.joined(separator: " · "))
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
         case .returnImmediately:
             Text("Continuous pickup loop is active.")
-                .font(.system(size: 11))
+                .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
         case .noMoreBuses:
             if let last = Schedule.lastDeparture(for: entry.primaryRoute, dayType: entry.dayType) {
                 Text("Last today was \(last)")
-                    .font(.system(size: 11))
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
         }
     }
 
-    // MARK: Secondary (right)
+    // MARK: Secondary stack (right) — both cards expand equally
 
     private var secondaryStack: some View {
         VStack(spacing: 6) {
@@ -202,10 +222,13 @@ struct MediumWidgetView: View {
                 title: WidgetTheme.routeLabel(for: oppositeRoute),
                 state: oppositeState
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
             secondaryCard(
                 title: "Then",
                 state: secondThenState()
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
@@ -222,7 +245,6 @@ struct MediumWidgetView: View {
            let secondsFromMidnight = Schedule.secondsFromTimeString(oppositeUpcoming[1]) {
             return .scheduled(time: oppositeUpcoming[1], departureSecondsFromMidnight: secondsFromMidnight)
         }
-        // Fallback: third upcoming on the primary route
         let primaryUpcoming = Schedule.upcomingDepartures(
             for: entry.primaryRoute,
             dayType: entry.dayType,
@@ -242,40 +264,50 @@ struct MediumWidgetView: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.75)
 
-            switch state {
-            case let .scheduled(time, departureSeconds):
-                let remaining = Schedule.secondsRemaining(
-                    until: departureSeconds,
-                    from: entry.currentSecondsFromMidnight
-                )
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(time)
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.primary)
-                    Spacer(minLength: 4)
-                    Text(CountdownFormatter.string(forSeconds: remaining))
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                }
-            case .returnImmediately:
-                Text("Loop active")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.green)
-            case .noMoreBuses:
-                Text("—")
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.tertiary)
-            }
+            Spacer(minLength: 0)
+
+            secondaryBody(state: state)
         }
-        .padding(8)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.primary.opacity(0.04))
         )
+    }
+
+    @ViewBuilder
+    private func secondaryBody(state: NextDepartureState) -> some View {
+        switch state {
+        case let .scheduled(time, departureSeconds):
+            let remaining = Schedule.secondsRemaining(
+                until: departureSeconds,
+                from: entry.currentSecondsFromMidnight
+            )
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(time)
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Spacer(minLength: 4)
+                Text(CountdownFormatter.string(forSeconds: remaining))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        case .returnImmediately:
+            Text("Loop active")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.green)
+        case .noMoreBuses:
+            Text("—")
+                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .foregroundStyle(.tertiary)
+        }
     }
 }
