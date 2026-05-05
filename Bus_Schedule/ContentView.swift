@@ -6,10 +6,23 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var location: Location = .phIINewCampus
     @State private var dayType: DayType = .weekday
+    @State private var followsAutomaticDayType = true
+
+    private var dayTypeBinding: Binding<DayType> {
+        Binding(
+            get: { dayType },
+            set: { newValue in
+                dayType = newValue
+                followsAutomaticDayType = newValue == Self.automaticDayType(for: Date())
+            }
+        )
+    }
     
     var body: some View {
         VStack(spacing: 50) {
@@ -40,14 +53,37 @@ struct ContentView: View {
                 .padding(.horizontal)
             
             // 日期类型切换
-            DayTypeToggleView(dayType: $dayType)
+            DayTypeToggleView(dayType: dayTypeBinding)
             
             Spacer()
         }
         .onAppear {
-            // 设置初始日期类型
-            let today = Calendar.current.component(.weekday, from: Date())
-            dayType = today == 1 || today == 7 ? .weekend : .weekday
+            syncDayTypeWithCurrentDate()
+        }
+        .onChange(of: scenePhase) { oldValue, newValue in
+            guard newValue == .active else { return }
+            syncDayTypeWithCurrentDate()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            syncDayTypeWithCurrentDate()
+        }
+    }
+
+    private func syncDayTypeWithCurrentDate(referenceDate: Date = Date()) {
+        guard followsAutomaticDayType else { return }
+        dayType = Self.automaticDayType(for: referenceDate)
+    }
+
+    private static func automaticDayType(for date: Date) -> DayType {
+        let weekday = Calendar.current.component(.weekday, from: date)
+
+        switch weekday {
+        case 7:
+            return .saturday
+        case 1:
+            return .sundayOrHoliday
+        default:
+            return .weekday
         }
     }
 }

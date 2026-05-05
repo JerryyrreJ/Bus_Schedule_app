@@ -9,7 +9,6 @@ struct NextBusView: View {
     @State private var isReturnImmediately: Bool = false
     @State private var showTooltip: Bool = false
     @State private var timer: Timer? = nil
-    @State private var minutesUntil: Int = 0
     
     var body: some View {
         VStack(spacing: 0) {
@@ -92,14 +91,14 @@ struct NextBusView: View {
         )
         .padding(.horizontal, 16)
         .onAppear {
-            updateNextBus()
+            refreshState()
             startTimer()
         }
         .onChange(of: location) { oldValue, newValue in
-            updateNextBus()
+            refreshState()
         }
         .onChange(of: dayType) { oldValue, newValue in
-            updateNextBus()
+            refreshState()
         }
         .onDisappear {
             timer?.invalidate()
@@ -108,104 +107,60 @@ struct NextBusView: View {
     }
     
     private func startTimer() {
+        guard timer == nil else { return }
+
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            updateCountdown()
+            refreshState()
         }
     }
     
-    private func updateCountdown() {
-        guard !nextDeparture.isEmpty && !isReturnImmediately else { return }
-        
-        let now = Date()
-        let calendar = Calendar.current
-        let currentHour = calendar.component(.hour, from: now)
-        let currentMinute = calendar.component(.minute, from: now)
-        let currentTime = currentHour * 60 + currentMinute
-        
-        let departureComponents = nextDeparture.split(separator: ":")
-        guard departureComponents.count == 2,
-              let departureHour = Int(departureComponents[0]),
-              let departureMinute = Int(departureComponents[1]) else {
-            return
-        }
-        
-        let departureMinutes = departureHour * 60 + departureMinute
-        minutesUntil = departureMinutes - currentTime
-        
-        let seconds = 60 - calendar.component(.second, from: now)
-        
-        if minutesUntil < 60 {
-            countdown = "\(minutesUntil)m \(seconds)s"
-        } else {
-            let hours = minutesUntil / 60
-            let minutes = minutesUntil % 60
-            countdown = "\(hours)h \(minutes)m"
-        }
-    }
-    
-    private func updateNextBus() {
-        let now = Date()
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: now)
-        let minute = calendar.component(.minute, from: now)
-        let currentTime = hour * 60 + minute
-        
-        // print("Current location: \(location)")
-        // print("Current time: \(hour):\(minute)")
-        
-        let schedule = Schedule.getCurrentSchedule(dayType)
-        
+    private func refreshState(referenceDate: Date = Date()) {
+        let currentSeconds = secondsFromMidnight(for: referenceDate)
+
         // 重置状态
         isReturnImmediately = false
         nextDeparture = ""
         countdown = ""
-        
-        // 检查"立即返回"状态（仅适用于一期）
-        if location == .phIParkingLot {
-            let currentTimeSlot = schedule.first { time in
-                let phIIComponents = time.phII.split(separator: ":").map { Int($0) ?? 0 }
-                let busTime = phIIComponents[0] * 60 + phIIComponents[1]
-                
-                if let nextTime = schedule.first(where: { $0.id == time.id + 1 }) {
-                    let nextComponents = nextTime.phII.split(separator: ":").map { Int($0) ?? 0 }
-                    let nextBusTime = nextComponents[0] * 60 + nextComponents[1]
-                    return currentTime >= busTime && currentTime < nextBusTime
-                }
-                return false
-            }
-            
-            if currentTimeSlot?.phI == "Return Immediately" {
-                isReturnImmediately = true
-                nextDeparture = "Return Immediately"
-                print("Phase I: Return Immediately status detected")
-                return
-            }
-        }
-        
-        // 查找下一班车
-        if let nextBus = schedule.first(where: { time in
-            let timeStr = location == .phIINewCampus ? time.phII : time.phI
-            if timeStr == "Return Immediately" { return false }
-            
-            let components = timeStr.split(separator: ":")
-            guard components.count == 2,
-                  let hour = Int(components[0]),
-                  let minute = Int(components[1]) else {
-                return false
-            }
-            
-            let busTime = hour * 60 + minute
-            return busTime > currentTime
-        }) {
-            let departureTime = location == .phIINewCampus ? nextBus.phII : nextBus.phI
-            nextDeparture = departureTime
-            
-            // 初始化倒计时
-            updateCountdown()
-        } else {
+
+        switch Schedule.nextDepartureState(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSeconds
+        ) {
+        case .returnImmediately:
+            isReturnImmediately = true
+            nextDeparture = "Return Immediately"
+        case .scheduled(let time, let departureSecondsFromMidnight):
+            nextDeparture = time
+            countdown = countdownString(
+                until: departureSecondsFromMidnight,
+                from: currentSeconds
+            )
+        case .noMoreBuses:
             nextDeparture = "No more buses today"
-            countdown = ""
         }
+    }
+
+    private func secondsFromMidnight(for date: Date) -> Int {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        let second = calendar.component(.second, from: date)
+
+        return hour * 3600 + minute * 60 + second
+    }
+
+    private func countdownString(until departureSeconds: Int, from currentSeconds: Int) -> String {
+        let remainingSeconds = max(0, departureSeconds - currentSeconds)
+        let hours = remainingSeconds / 3600
+        let minutes = (remainingSeconds % 3600) / 60
+        let seconds = remainingSeconds % 60
+
+        if remainingSeconds < 3600 {
+            return "\(minutes)m \(seconds)s"
+        }
+
+        return "\(hours)h \(minutes)m"
     }
 }
 
