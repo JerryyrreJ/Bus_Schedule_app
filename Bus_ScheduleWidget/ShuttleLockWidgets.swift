@@ -59,3 +59,36 @@ struct ShuttleLockInlineWidget: Widget {
         .supportedFamilies([.accessoryInline])
     }
 }
+
+#Preview(as: .accessoryRectangular) {
+    ShuttleLockRectangularWidget()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 9, minute: 5)) ?? .now,
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
+    )
+}
+
+#Preview(as: .accessoryCircular) {
+    ShuttleLockCircularWidget()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 10, hour: 10, minute: 34)) ?? .now,
+        primaryRoute: .phIParkingLot,
+        dayType: .sundayOrHoliday,
+        isManualOverride: true
+    )
+}
+
+#Preview(as: .accessoryInline) {
+    ShuttleLockInlineWidget()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 10, hour: 20, minute: 52)) ?? .now,
+        primaryRoute: .phIParkingLot,
+        dayType: .sundayOrHoliday,
+        isManualOverride: false
+    )
+}

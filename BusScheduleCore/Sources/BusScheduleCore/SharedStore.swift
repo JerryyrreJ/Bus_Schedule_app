@@ -17,11 +17,22 @@ import WatchConnectivity
 public enum SharedStore {
     public static let appGroup = "group.Jerry-Lu.Bus-Schedule"
     public static let dayTypeOverrideKey = "dayTypeOverride"
+    public static let dayTypeOverrideUpdatedAtKey = "dayTypeOverrideUpdatedAt"
     public static let primaryRouteKey = "primaryRoute"
     public static let primaryRouteUpdatedAtKey = "primaryRouteUpdatedAt"
 
     public static var localDefaults: UserDefaults {
-        UserDefaults(suiteName: appGroup) ?? .standard
+        guard FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: appGroup
+        ) != nil else {
+            preconditionFailure("App Group container unavailable: \(appGroup)")
+        }
+
+        guard let defaults = UserDefaults(suiteName: appGroup) else {
+            preconditionFailure("Shared UserDefaults unavailable for App Group: \(appGroup)")
+        }
+
+        return defaults
     }
 
     /// Returns the persisted manual override from the local App Group store
@@ -34,9 +45,10 @@ public enum SharedStore {
 
     /// Persist a manual override. Pass nil to clear. Writes locally and then
     /// republishes the latest state to the paired Watch when possible.
-    public static func writeOverride(_ dayType: DayType?) {
+    public static func writeOverride(_ dayType: DayType?, sourceDate: Date = Date()) {
         let value = dayType?.rawValue ?? ""
-        applyOverrideValue(value)
+        let updatedAt = sourceDate.timeIntervalSince1970
+        applyOverrideValue(value, updatedAt: updatedAt)
         WatchPreferenceSync.shared.publishLocalPreferences()
     }
 
@@ -74,6 +86,10 @@ public enum SharedStore {
         localDefaults.string(forKey: dayTypeOverrideKey) ?? ""
     }
 
+    static func localOverrideUpdatedAt() -> TimeInterval {
+        localDefaults.double(forKey: dayTypeOverrideUpdatedAtKey)
+    }
+
     static func localPrimaryRouteValue() -> String {
         localDefaults.string(forKey: primaryRouteKey) ?? Location.phIINewCampus.rawValue
     }
@@ -90,18 +106,43 @@ public enum SharedStore {
         localDefaults.set(value, forKey: dayTypeOverrideKey)
     }
 
+    static func writeLocalOverrideValue(_ value: String, updatedAt: TimeInterval) {
+        localDefaults.set(value, forKey: dayTypeOverrideKey)
+        localDefaults.set(updatedAt, forKey: dayTypeOverrideUpdatedAtKey)
+    }
+
     static func writeLocalPrimaryRoute(_ route: Location, updatedAt: TimeInterval) {
         localDefaults.set(route.rawValue, forKey: primaryRouteKey)
         localDefaults.set(updatedAt, forKey: primaryRouteUpdatedAtKey)
     }
 
     @discardableResult
-    static func applyOverrideValue(_ value: String) -> Bool {
-        guard localOverrideValue() != value else { return false }
-        writeLocalOverrideValue(value)
+    static func applyOverrideValue(_ value: String, updatedAt: TimeInterval) -> Bool {
+        let currentValue = localOverrideValue()
+        let currentUpdatedAt = localOverrideUpdatedAt()
+
+        guard currentValue != value || currentUpdatedAt != updatedAt else { return false }
+
+        writeLocalOverrideValue(value, updatedAt: updatedAt)
+
+        guard currentValue != value else { return false }
+
         WidgetCenter.shared.reloadAllTimelines()
         NotificationCenter.default.post(name: .dayTypeOverrideDidChange, object: nil)
         return true
+    }
+
+    @discardableResult
+    static func applyIncomingOverrideValue(_ value: String, updatedAt: TimeInterval) -> Bool {
+        let currentUpdatedAt = localOverrideUpdatedAt()
+        if updatedAt < currentUpdatedAt {
+            return false
+        }
+        if updatedAt == currentUpdatedAt, localOverrideValue() == value {
+            return false
+        }
+
+        return applyOverrideValue(value, updatedAt: updatedAt)
     }
 
     @discardableResult
@@ -190,6 +231,7 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
     static let shared = WatchPreferenceSync()
 
     private let overridePayloadKey = SharedStore.dayTypeOverrideKey
+    private let overrideUpdatedAtPayloadKey = SharedStore.dayTypeOverrideUpdatedAtKey
     private let routePayloadKey = SharedStore.primaryRouteKey
     private let routeUpdatedAtPayloadKey = SharedStore.primaryRouteUpdatedAtKey
     private let session = WCSession.default
@@ -226,6 +268,7 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
 
         let payload: [String: Any] = [
             overridePayloadKey: SharedStore.localOverrideValue(),
+            overrideUpdatedAtPayloadKey: SharedStore.localOverrideUpdatedAt(),
             routePayloadKey: SharedStore.localPrimaryRouteValue(),
             routeUpdatedAtPayloadKey: SharedStore.localPrimaryRouteUpdatedAt()
         ]
@@ -284,6 +327,14 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
 
     private func applyPayload(_ payload: [String: Any]) {
         let overrideValue = payload[overridePayloadKey] as? String
+        let overrideUpdatedAt: TimeInterval
+        if let updatedAt = payload[overrideUpdatedAtPayloadKey] as? TimeInterval {
+            overrideUpdatedAt = updatedAt
+        } else if let updatedAtNumber = payload[overrideUpdatedAtPayloadKey] as? NSNumber {
+            overrideUpdatedAt = updatedAtNumber.doubleValue
+        } else {
+            overrideUpdatedAt = 0
+        }
         let routeValue = payload[routePayloadKey] as? String
         let routeUpdatedAt: TimeInterval
         if let updatedAt = payload[routeUpdatedAtPayloadKey] as? TimeInterval {
@@ -295,7 +346,7 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         }
 
         DispatchQueue.main.async {
-            overrideValue.map(SharedStore.applyOverrideValue)
+            overrideValue.map { SharedStore.applyIncomingOverrideValue($0, updatedAt: overrideUpdatedAt) }
             routeValue.map { SharedStore.applyIncomingPrimaryRouteValue($0, updatedAt: routeUpdatedAt) }
         }
     }

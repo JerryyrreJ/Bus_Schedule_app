@@ -85,7 +85,6 @@
 		3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Bus_ScheduleWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F8823E22FA9E3350070C89C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3F8823E42FA9E3350070C89C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bus_ScheduleWidgetExtension.entitlements; sourceTree = "<group>"; };
 		3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Bus_ScheduleWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Bus_ScheduleWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F8824862FA9FA1B0070C89C /* Bus_ScheduleWatchWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Bus_ScheduleWatchWidgetExtension.entitlements; sourceTree = "<group>"; };
@@ -181,7 +180,6 @@
 			isa = PBXGroup;
 			children = (
 				3F8824862FA9FA1B0070C89C /* Bus_ScheduleWatchWidgetExtension.entitlements */,
-				3F88240F2FA9E6D90070C89C /* Bus_ScheduleWidgetExtension.entitlements */,
 				3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */,
 				3F8823E62FA9E3350070C89C /* Bus_ScheduleWidget */,
 				3F88241A2FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */,

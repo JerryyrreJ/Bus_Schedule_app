@@ -236,28 +236,29 @@ struct MediumWidgetView: View {
         }
     }
 
-    /// Compute the second-upcoming for the opposite direction. Falls through to
-    /// the same-route's third upcoming if the opposite direction has nothing.
+    /// Compute the immediate follow-up departure for the opposite direction.
+    /// Falls through to the same route's second upcoming if the opposite
+    /// direction has no follow-up departure available.
     private func secondThenState() -> NextDepartureState {
         let oppositeUpcoming = Schedule.upcomingDepartures(
             for: oppositeRoute,
             dayType: entry.dayType,
             currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
-            limit: 2
+            limit: 1
         )
-        if oppositeUpcoming.count >= 2,
-           let secondsFromMidnight = Schedule.secondsFromTimeString(oppositeUpcoming[1]) {
-            return .scheduled(time: oppositeUpcoming[1], departureSecondsFromMidnight: secondsFromMidnight)
+        if let nextFollowUp = oppositeUpcoming.first,
+           let secondsFromMidnight = Schedule.secondsFromTimeString(nextFollowUp) {
+            return .scheduled(time: nextFollowUp, departureSecondsFromMidnight: secondsFromMidnight)
         }
         let primaryUpcoming = Schedule.upcomingDepartures(
             for: entry.primaryRoute,
             dayType: entry.dayType,
             currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
-            limit: 3
+            limit: 2
         )
-        if primaryUpcoming.count >= 3,
-           let secondsFromMidnight = Schedule.secondsFromTimeString(primaryUpcoming[2]) {
-            return .scheduled(time: primaryUpcoming[2], departureSecondsFromMidnight: secondsFromMidnight)
+        if primaryUpcoming.count >= 2,
+           let secondsFromMidnight = Schedule.secondsFromTimeString(primaryUpcoming[1]) {
+            return .scheduled(time: primaryUpcoming[1], departureSecondsFromMidnight: secondsFromMidnight)
         }
         return .noMoreBuses
     }

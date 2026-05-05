@@ -65,3 +65,47 @@ struct ShuttleWatchCorner: Widget {
         .supportedFamilies([.accessoryCorner])
     }
 }
+
+#Preview(as: .accessoryCircular) {
+    ShuttleWatchCircular()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 8, minute: 18)) ?? .now,
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
+    )
+}
+
+#Preview(as: .accessoryRectangular) {
+    ShuttleWatchRectangular()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 10, hour: 14, minute: 6)) ?? .now,
+        primaryRoute: .phIParkingLot,
+        dayType: .sundayOrHoliday,
+        isManualOverride: true
+    )
+}
+
+#Preview(as: .accessoryInline) {
+    ShuttleWatchInline()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 10, hour: 21, minute: 12)) ?? .now,
+        primaryRoute: .phIParkingLot,
+        dayType: .sundayOrHoliday,
+        isManualOverride: false
+    )
+}
+
+#Preview(as: .accessoryCorner) {
+    ShuttleWatchCorner()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 17, minute: 41)) ?? .now,
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
+    )
+}

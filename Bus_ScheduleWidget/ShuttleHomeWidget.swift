@@ -41,3 +41,25 @@ struct ShuttleHomeWidgetView: View {
         }
     }
 }
+
+#Preview(as: .systemSmall) {
+    ShuttleHomeWidget()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 8, minute: 12)) ?? .now,
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
+    )
+}
+
+#Preview(as: .systemMedium) {
+    ShuttleHomeWidget()
+} timeline: {
+    ShuttleEntry(
+        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 17, minute: 38)) ?? .now,
+        primaryRoute: .phIParkingLot,
+        dayType: .weekday,
+        isManualOverride: true
+    )
+}

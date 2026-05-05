@@ -16,7 +16,6 @@ import BusScheduleCore
 
 struct WatchContentView: View {
     @State private var primaryRoute: Location = SharedStore.readPrimaryRoute()
-    @State private var dayType: DayType = .weekday
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -43,10 +42,11 @@ struct WatchContentView: View {
 
     @ViewBuilder
     private func content(at date: Date) -> some View {
+        let resolvedDayType = DayType.effective(for: date).dayType
         let currentSeconds = Schedule.secondsFromMidnight(for: date)
         let state = Schedule.nextDepartureState(
             for: primaryRoute,
-            dayType: dayType,
+            dayType: resolvedDayType,
             currentSecondsFromMidnight: currentSeconds
         )
 
@@ -64,10 +64,11 @@ struct WatchContentView: View {
                 scheduledBlock(
                     time: time,
                     departureSeconds: departureSeconds,
-                    currentSeconds: currentSeconds
+                    currentSeconds: currentSeconds,
+                    dayType: resolvedDayType
                 )
             case .returnImmediately:
-                returnImmediatelyBlock(currentSeconds: currentSeconds)
+                returnImmediatelyBlock(currentSeconds: currentSeconds, dayType: resolvedDayType)
             case .noMoreBuses:
                 noMoreBusesBlock(date: date)
             }
@@ -108,7 +109,12 @@ struct WatchContentView: View {
     }
 
     @ViewBuilder
-    private func scheduledBlock(time: String, departureSeconds: Int, currentSeconds: Int) -> some View {
+    private func scheduledBlock(
+        time: String,
+        departureSeconds: Int,
+        currentSeconds: Int,
+        dayType: DayType
+    ) -> some View {
         let remaining = Schedule.secondsRemaining(until: departureSeconds, from: currentSeconds)
         let urgency = WidgetUrgency.from(secondsRemaining: remaining)
         let upcoming = Schedule.upcomingDepartures(
@@ -117,7 +123,11 @@ struct WatchContentView: View {
             currentSecondsFromMidnight: currentSeconds,
             limit: 2
         )
-        let progress = waitProgress(currentSeconds: currentSeconds, departureSeconds: departureSeconds)
+        let progress = waitProgress(
+            currentSeconds: currentSeconds,
+            departureSeconds: departureSeconds,
+            dayType: dayType
+        )
         let barColor = WidgetTheme.countdownColor(for: urgency, location: primaryRoute)
 
         // Hero: big departure time — fills the full width.
@@ -161,7 +171,7 @@ struct WatchContentView: View {
     /// departure and the next one. If there is no previous departure today
     /// (we're before the first bus), falls back to a 30-minute imminence
     /// scale so the bar still has meaning.
-    private func waitProgress(currentSeconds: Int, departureSeconds: Int) -> Double {
+    private func waitProgress(currentSeconds: Int, departureSeconds: Int, dayType: DayType) -> Double {
         if let prev = Schedule.previousDepartureSeconds(
             for: primaryRoute,
             dayType: dayType,
@@ -215,7 +225,7 @@ struct WatchContentView: View {
     }
 
     @ViewBuilder
-    private func returnImmediatelyBlock(currentSeconds: Int) -> some View {
+    private func returnImmediatelyBlock(currentSeconds: Int, dayType: DayType) -> some View {
         Text("Return\nImmediately")
             .font(.system(size: 26, weight: .semibold, design: .rounded))
             .foregroundStyle(.green)
@@ -295,7 +305,6 @@ struct WatchContentView: View {
 
     private func applyEffectiveDayType(referenceDate: Date = Date()) {
         SharedStore.selfHealOverride(for: referenceDate)
-        dayType = DayType.effective(for: referenceDate).dayType
     }
 
     private func applyRoutePreference() {
