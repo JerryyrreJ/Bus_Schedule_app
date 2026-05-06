@@ -76,12 +76,21 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
+            BlueprintIdentifier = "3F8824302FA9F74A0070C89C"
+            BuildableName = "Bus_ScheduleWatchWidgetExtension.appex"
+            BlueprintName = "Bus_ScheduleWatchWidgetExtension"
+            ReferencedContainer = "container:Bus_Schedule.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F735ECF2CE1BE3700C1BB86"
             BuildableName = "Bus_Schedule.app"
             BlueprintName = "Bus_Schedule"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "_XCWidgetKind"

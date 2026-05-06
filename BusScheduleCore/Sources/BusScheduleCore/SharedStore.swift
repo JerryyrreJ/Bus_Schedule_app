@@ -127,6 +127,7 @@ public enum SharedStore {
 
         guard currentValue != value else { return false }
 
+        print("[BusSchedule.WCSync] override changed '\(currentValue)' → '\(value)' — reload widgets, post notification")
         WidgetCenter.shared.reloadAllTimelines()
         NotificationCenter.default.post(name: .dayTypeOverrideDidChange, object: nil)
         return true
@@ -136,12 +137,15 @@ public enum SharedStore {
     static func applyIncomingOverrideValue(_ value: String, updatedAt: TimeInterval) -> Bool {
         let currentUpdatedAt = localOverrideUpdatedAt()
         if updatedAt < currentUpdatedAt {
+            print("[BusSchedule.WCSync] override reject: incoming \(updatedAt) < local \(currentUpdatedAt)")
             return false
         }
         if updatedAt == currentUpdatedAt, localOverrideValue() == value {
+            print("[BusSchedule.WCSync] override reject: timestamp tie and same value")
             return false
         }
 
+        print("[BusSchedule.WCSync] override apply incoming '\(value)'@\(updatedAt) (was @\(currentUpdatedAt))")
         return applyOverrideValue(value, updatedAt: updatedAt)
     }
 
@@ -158,6 +162,7 @@ public enum SharedStore {
 
         guard currentRoute != route else { return false }
 
+        print("[BusSchedule.WCSync] route changed \(currentRoute.rawValue) → \(route.rawValue) — reload widgets, post notification")
         WidgetCenter.shared.reloadAllTimelines()
         NotificationCenter.default.post(name: .primaryRouteDidChange, object: nil)
         return true
@@ -165,16 +170,22 @@ public enum SharedStore {
 
     @discardableResult
     static func applyIncomingPrimaryRouteValue(_ value: String, updatedAt: TimeInterval) -> Bool {
-        guard let route = Location(rawValue: value) else { return false }
+        guard let route = Location(rawValue: value) else {
+            print("[BusSchedule.WCSync] route reject: unknown raw value '\(value)'")
+            return false
+        }
 
         let currentUpdatedAt = localPrimaryRouteUpdatedAt()
         if updatedAt < currentUpdatedAt {
+            print("[BusSchedule.WCSync] route reject: incoming \(updatedAt) < local \(currentUpdatedAt)")
             return false
         }
         if updatedAt == currentUpdatedAt, hasStoredPrimaryRoute() {
+            print("[BusSchedule.WCSync] route reject: timestamp tie and already stored")
             return false
         }
 
+        print("[BusSchedule.WCSync] route apply incoming \(value)@\(updatedAt) (was @\(currentUpdatedAt))")
         return applyPrimaryRoute(route, updatedAt: updatedAt)
     }
 }
@@ -252,14 +263,21 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         lock.unlock()
 
         guard !alreadyStarted else {
-            publishLocalPreferences()
+            // Already wired up earlier in this process. If session is now
+            // activated, push the latest local state so any value written
+            // before activation completed still gets out.
+            if session.activationState == .activated {
+                publishLocalPreferences()
+            }
             return
         }
 
+        // Activation is async — do not call updateApplicationContext or read
+        // receivedApplicationContext until activationDidCompleteWith fires.
+        // Initial publish + apply-received both happen there.
         session.delegate = self
         session.activate()
-        applyReceivedContextIfPresent()
-        publishLocalPreferences()
+        print("[BusSchedule.WCSync] start() called, session.activate() pending")
     }
 
     func publishLocalPreferences() {
@@ -273,11 +291,17 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
             routeUpdatedAtPayloadKey: SharedStore.localPrimaryRouteUpdatedAt()
         ]
 
+        #if os(iOS)
+        let pairing = "paired=\(session.isPaired) installed=\(session.isWatchAppInstalled)"
+        #else
+        let pairing = "iosCounterpart=\(session.isCompanionAppInstalled)"
+        #endif
+        print("[BusSchedule.WCSync] publish state=\(session.activationState.rawValue) \(pairing) route=\(SharedStore.localPrimaryRouteValue())@\(SharedStore.localPrimaryRouteUpdatedAt()) override=\(SharedStore.localOverrideValue())@\(SharedStore.localOverrideUpdatedAt())")
+
         do {
             try session.updateApplicationContext(payload)
         } catch {
-            // Best effort only. The latest state will be republished on the
-            // next process launch / activation.
+            print("[BusSchedule.WCSync] updateApplicationContext threw: \(error)")
         }
 
         #if os(iOS)
@@ -292,7 +316,13 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         activationDidCompleteWith activationState: WCSessionActivationState,
         error: (any Error)?
     ) {
+        print("[BusSchedule.WCSync] activated state=\(activationState.rawValue) error=\(String(describing: error))")
+        // Pull anything the counterpart pushed before we were ready, then push
+        // our own local state. Doing the publish here (rather than at the end
+        // of start()) is what guarantees our value actually reaches the other
+        // side — updateApplicationContext throws silently before activation.
         applyReceivedContextIfPresent()
+        publishLocalPreferences()
     }
 
     #if os(iOS)
@@ -344,6 +374,8 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         } else {
             routeUpdatedAt = 0
         }
+
+        print("[BusSchedule.WCSync] received route=\(routeValue ?? "nil")@\(routeUpdatedAt) override=\(overrideValue ?? "nil")@\(overrideUpdatedAt)")
 
         DispatchQueue.main.async {
             overrideValue.map { SharedStore.applyIncomingOverrideValue($0, updatedAt: overrideUpdatedAt) }

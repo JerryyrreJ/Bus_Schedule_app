@@ -42,24 +42,64 @@ struct ShuttleHomeWidgetView: View {
     }
 }
 
-#Preview(as: .systemSmall) {
+private func previewDate(
+    year: Int,
+    month: Int,
+    day: Int,
+    hour: Int,
+    minute: Int
+) -> Date {
+    Calendar.current.date(
+        from: DateComponents(
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute
+        )
+    ) ?? .now
+}
+
+#Preview("Small · Morning", as: .systemSmall) {
     ShuttleHomeWidget()
 } timeline: {
     ShuttleEntry(
-        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 8, minute: 12)) ?? .now,
+        date: previewDate(year: 2026, month: 5, day: 6, hour: 8, minute: 12),
         primaryRoute: .phIINewCampus,
         dayType: .weekday,
         isManualOverride: false
     )
 }
 
-#Preview(as: .systemMedium) {
+#Preview("Small · Service Ended", as: .systemSmall) {
     ShuttleHomeWidget()
 } timeline: {
     ShuttleEntry(
-        date: Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 6, hour: 17, minute: 38)) ?? .now,
+        date: previewDate(year: 2026, month: 5, day: 6, hour: 22, minute: 12),
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
+    )
+}
+
+#Preview("Medium · Afternoon", as: .systemMedium) {
+    ShuttleHomeWidget()
+} timeline: {
+    ShuttleEntry(
+        date: previewDate(year: 2026, month: 5, day: 6, hour: 17, minute: 38),
         primaryRoute: .phIParkingLot,
         dayType: .weekday,
         isManualOverride: true
+    )
+}
+
+#Preview("Medium · Service Ended", as: .systemMedium) {
+    ShuttleHomeWidget()
+} timeline: {
+    ShuttleEntry(
+        date: previewDate(year: 2026, month: 5, day: 6, hour: 22, minute: 31),
+        primaryRoute: .phIINewCampus,
+        dayType: .weekday,
+        isManualOverride: false
     )
 }
