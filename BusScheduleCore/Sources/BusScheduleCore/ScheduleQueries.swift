@@ -20,6 +20,20 @@ public enum WidgetUrgency: Sendable {
     }
 }
 
+public enum CircularComplicationState: Sendable {
+    case scheduled(
+        departureTime: String,
+        departureDate: Date,
+        gaugeStartDate: Date?
+    )
+    case beforeFirstDeparture(
+        departureTime: String,
+        departureDate: Date
+    )
+    case returnImmediately
+    case noMoreBuses
+}
+
 public extension Schedule {
 
     static func firstDeparture(for location: Location, dayType: DayType) -> String? {
@@ -85,6 +99,112 @@ public extension Schedule {
         from currentSecondsFromMidnight: Int
     ) -> Int {
         max(0, departureSecondsFromMidnight - currentSecondsFromMidnight)
+    }
+
+    static func nextScheduledDeparture(
+        for location: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int
+    ) -> (time: String, departureSecondsFromMidnight: Int)? {
+        let schedule = getCurrentSchedule(dayType)
+
+        for busTime in schedule {
+            let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
+
+            guard let departureSeconds = secondsFromTimeString(timeString),
+                  departureSeconds > currentSecondsFromMidnight else {
+                continue
+            }
+
+            return (timeString, departureSeconds)
+        }
+
+        return nil
+    }
+
+    static func circularComplicationState(
+        for location: Location,
+        dayType: DayType,
+        at date: Date
+    ) -> CircularComplicationState {
+        let currentSecondsFromMidnight = secondsFromMidnight(for: date)
+
+        if location == .phIParkingLot {
+            let state = nextDepartureState(
+                for: location,
+                dayType: dayType,
+                currentSecondsFromMidnight: currentSecondsFromMidnight
+            )
+            if case .returnImmediately = state {
+                return .returnImmediately
+            }
+        }
+
+        guard let next = nextScheduledDeparture(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSecondsFromMidnight
+        ) else {
+            return .noMoreBuses
+        }
+
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let departureDate = startOfDay.addingTimeInterval(TimeInterval(next.departureSecondsFromMidnight))
+
+        if let previousSeconds = previousDepartureSeconds(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSecondsFromMidnight
+        ) {
+            let gaugeStartDate = startOfDay.addingTimeInterval(TimeInterval(previousSeconds))
+            return .scheduled(
+                departureTime: next.time,
+                departureDate: departureDate,
+                gaugeStartDate: gaugeStartDate
+            )
+        }
+
+        return .beforeFirstDeparture(
+            departureTime: next.time,
+            departureDate: departureDate
+        )
+    }
+
+    static func nextInterestingRefreshDate(
+        for location: Location,
+        dayType: DayType,
+        after date: Date
+    ) -> Date? {
+        let currentSecondsFromMidnight = secondsFromMidnight(for: date)
+        let startOfDay = Calendar.current.startOfDay(for: date)
+
+        switch circularComplicationState(for: location, dayType: dayType, at: date) {
+        case let .scheduled(_, departureDate, _):
+            return departureDate.addingTimeInterval(1)
+
+        case let .beforeFirstDeparture(_, departureDate):
+            return departureDate.addingTimeInterval(1)
+
+        case .returnImmediately:
+            if let deadline = returnImmediatelyDeadline(
+                dayType: dayType,
+                currentSecondsFromMidnight: currentSecondsFromMidnight
+            ),
+               let endSeconds = secondsFromTimeString(deadline) {
+                return startOfDay.addingTimeInterval(TimeInterval(endSeconds) + 1)
+            }
+            return nil
+
+        case .noMoreBuses:
+            let next = nextDayType(after: date)
+            guard let first = firstDeparture(for: location, dayType: next.dayType),
+                  let firstSeconds = secondsFromTimeString(first) else {
+                return nil
+            }
+            return Calendar.current.startOfDay(for: next.date)
+                .addingTimeInterval(TimeInterval(firstSeconds))
+        }
     }
 
     /// Seconds-from-midnight of the most recent departure that has already left

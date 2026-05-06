@@ -17,49 +17,100 @@ struct WatchCircularView: View {
     let entry: ShuttleEntry
 
     var body: some View {
-        let state = Schedule.nextDepartureState(
+        switch Schedule.circularComplicationState(
             for: entry.primaryRoute,
             dayType: entry.dayType,
-            currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-        )
+            at: entry.date
+        ) {
+        case let .scheduled(_, departureDate, gaugeStartDate):
+            if let gaugeStartDate {
+                Gauge(value: 1) {
+                    EmptyView()
+                } currentValueLabel: {
+                    circularCenterLabel(for: departureDate)
+                } minimumValueLabel: {
+                    EmptyView()
+                } maximumValueLabel: {
+                    EmptyView()
+                }
+                .gaugeStyle(.accessoryCircular)
+                .tint(.primary)
+                .overlay {
+                    ProgressView(timerInterval: gaugeStartDate...departureDate, countsDown: false)
+                        .progressViewStyle(.circular)
+                        .tint(.clear)
+                }
+            } else {
+                staticRing {
+                    circularCenterLabel(for: departureDate)
+                }
+            }
 
-        VStack(spacing: 1) {
-            switch state {
-            case let .scheduled(time, departureSeconds):
-                let remaining = Schedule.secondsRemaining(
-                    until: departureSeconds,
-                    from: entry.currentSecondsFromMidnight
-                )
-                Image(systemName: WidgetTheme.busSymbol)
-                    .font(.system(size: 11, weight: .semibold))
-                Text(time)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.7)
-                Text(CountdownFormatter.string(forSeconds: remaining))
-                    .font(.system(size: 9, weight: .semibold))
-                    .monospacedDigit()
+        case .returnImmediately:
+            Gauge(value: 1) {
+                EmptyView()
+            } currentValueLabel: {
+                VStack(spacing: 1) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("Loop")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+            }
+            .gaugeStyle(.accessoryCircular)
+            .tint(.primary)
 
-            case .returnImmediately:
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 14, weight: .semibold))
-                Text("Loop")
-                    .font(.system(size: 11, weight: .semibold))
+        case let .beforeFirstDeparture(_, departureDate):
+            staticRing {
+                circularCenterLabel(for: departureDate)
+            }
 
-            case .noMoreBuses:
-                Image(systemName: "moon.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                if let first = Schedule.firstDeparture(
-                    for: entry.primaryRoute,
-                    dayType: Schedule.nextDayType(after: entry.date).dayType
-                ) {
-                    Text(first)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.7)
+        case .noMoreBuses:
+            staticRing {
+                VStack(spacing: 1) {
+                    Image(systemName: "moon.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("Done")
+                        .font(.system(size: 10, weight: .semibold))
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func circularCenterLabel(for departureDate: Date) -> some View {
+        let remaining = max(0, Int(departureDate.timeIntervalSince(entry.date)))
+
+        VStack(spacing: 1) {
+            Image(systemName: WidgetTheme.busSymbol)
+                .font(.system(size: 10, weight: .semibold))
+
+            if remaining <= 0 {
+                Text("Now")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .minimumScaleFactor(0.7)
+            } else if remaining <= 60 {
+                Text(departureDate, style: .timer)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.7)
+            } else {
+                Text("\(Int(ceil(Double(remaining) / 60.0)))m")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.7)
+            }
+        }
+    }
+
+    private func staticRing<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        Gauge(value: 0.01) {
+            EmptyView()
+        } currentValueLabel: {
+            content()
+        }
+        .gaugeStyle(.accessoryCircular)
+        .tint(.secondary.opacity(0.35))
     }
 }
 

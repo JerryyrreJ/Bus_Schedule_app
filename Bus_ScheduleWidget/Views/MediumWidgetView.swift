@@ -2,12 +2,10 @@
 //  MediumWidgetView.swift
 //  Bus_ScheduleWidget
 //
-//  Dual-route medium widget (per design doc Section 3):
-//    • Header with bus icon, "Campus Shuttle" label, and override chip (right)
-//    • Primary card (left, ~60%): route line, big time + countdown stacked,
-//      and a small footer ("Then 17:40 · 18:10")
-//    • Secondary stack (right, ~40%): opposite-direction next + then-after,
-//      both cards expand equally to fill widget height
+//  Medium widget states:
+//    • Default          — dual-column next + follow-up layout
+//    • Last Departure   — dual-column, primary route's next bus is the last today
+//    • Overnight Ended  — single-card night layout after both directions end
 //
 
 import SwiftUI
@@ -16,6 +14,17 @@ import BusScheduleCore
 
 struct MediumWidgetView: View {
     let entry: ShuttleEntry
+
+    private enum LayoutState {
+        case `default`
+        case lastDeparture
+        case overnightEnded
+    }
+
+    private enum SecondaryNoMoreStyle {
+        case dash
+        case serviceEnded
+    }
 
     private var primaryState: NextDepartureState {
         Schedule.nextDepartureState(
@@ -35,16 +44,60 @@ struct MediumWidgetView: View {
         )
     }
 
+    private var layoutState: LayoutState {
+        if isOvernightEnded {
+            return .overnightEnded
+        }
+        if isPrimaryLastDepartureToday {
+            return .lastDeparture
+        }
+        return .default
+    }
+
+    private var isOvernightEnded: Bool {
+        if case .noMoreBuses = primaryState,
+           case .noMoreBuses = oppositeState {
+            return true
+        }
+        return false
+    }
+
+    private var isPrimaryLastDepartureToday: Bool {
+        guard case .scheduled = primaryState else { return false }
+        return Schedule.upcomingDepartures(
+            for: entry.primaryRoute,
+            dayType: entry.dayType,
+            currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
+            limit: 1
+        ).isEmpty
+    }
+
+    // Manual override should keep using the currently forced day type when
+    // computing "tomorrow first" in the medium widget's night states.
+    private var nextServiceDayType: DayType {
+        entry.isManualOverride ? entry.dayType : Schedule.nextDayType(after: entry.date).dayType
+    }
+
+    private var primaryTomorrowFirst: String? {
+        Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextServiceDayType)
+    }
+
+    private var oppositeTomorrowFirst: String? {
+        Schedule.firstDeparture(for: oppositeRoute, dayType: nextServiceDayType)
+    }
+
+    private var primaryLastToday: String? {
+        Schedule.lastDeparture(for: entry.primaryRoute, dayType: entry.dayType)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
-            mainGrid
+            content
                 .frame(maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
-
-    // MARK: Header
 
     private var header: some View {
         HStack(spacing: 6) {
@@ -59,7 +112,15 @@ struct MediumWidgetView: View {
         }
     }
 
-    // MARK: Body grid — both columns fill the available height equally
+    @ViewBuilder
+    private var content: some View {
+        switch layoutState {
+        case .overnightEnded:
+            overnightCard
+        case .default, .lastDeparture:
+            mainGrid
+        }
+    }
 
     private var mainGrid: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -69,8 +130,6 @@ struct MediumWidgetView: View {
                 .frame(width: 128, alignment: .top)
         }
     }
-
-    // MARK: Primary card (left)
 
     private var primaryCard: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -83,34 +142,37 @@ struct MediumWidgetView: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
-            // ContainerRelativeShape — auto-computes a corner radius that's
-            // concentric with the widget's outer corner. Works on any iPhone
-            // (different models have different widget container radii).
             ContainerRelativeShape()
                 .fill(Color.primary.opacity(0.04))
         )
     }
 
     private var routeLine: some View {
-        HStack(spacing: 4) {
-            Text("PRIMARY")
-                .font(.system(size: 9, weight: .heavy))
-                .tracking(0.8)
-                .foregroundStyle(.secondary)
-            Text("·")
-                .font(.system(size: 9, weight: .heavy))
-                .foregroundStyle(.tertiary)
-            Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+        HStack(spacing: 6) {
+            HStack(spacing: 4) {
+                Text("PRIMARY")
+                    .font(.system(size: 9, weight: .heavy))
+                    .tracking(0.8)
+                    .foregroundStyle(.secondary)
+                Text("·")
+                    .font(.system(size: 9, weight: .heavy))
+                    .foregroundStyle(.tertiary)
+                Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .layoutPriority(1)
+
+            Spacer(minLength: 0)
+
+            if layoutState == .lastDeparture {
+                statusBadge("LAST TODAY")
+            }
         }
     }
 
-    /// Big time stacked vertically with a small "Leaves in 12m" row beneath.
-    /// Vertical layout ensures the big number never has to share width with the
-    /// countdown — fixes the truncation issue from v1.
     @ViewBuilder
     private var primaryHeadline: some View {
         switch primaryState {
@@ -160,12 +222,11 @@ struct MediumWidgetView: View {
             }
 
         case .noMoreBuses:
-            let nextDay = Schedule.nextDayType(after: entry.date)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Service ended")
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
-                if let first = Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextDay.dayType) {
+                if let first = primaryTomorrowFirst {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("FIRST TOMORROW")
                             .font(.system(size: 8, weight: .heavy))
@@ -183,62 +244,131 @@ struct MediumWidgetView: View {
 
     @ViewBuilder
     private var primaryFooter: some View {
-        switch primaryState {
-        case .scheduled:
-            let upcoming = Schedule.upcomingDepartures(
-                for: entry.primaryRoute,
-                dayType: entry.dayType,
-                currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
-                limit: 2
-            )
-            if !upcoming.isEmpty {
-                HStack(spacing: 4) {
-                    Text("Then")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                    Text(upcoming.joined(separator: " · "))
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-            }
-        case .returnImmediately:
-            Text("Continuous pickup loop is active.")
+        switch layoutState {
+        case .lastDeparture:
+            Text("No more departures after this")
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-        case .noMoreBuses:
-            if let last = Schedule.lastDeparture(for: entry.primaryRoute, dayType: entry.dayType) {
-                Text("Last today was \(last)")
+
+        case .default, .overnightEnded:
+            switch primaryState {
+            case .scheduled:
+                let upcoming = Schedule.upcomingDepartures(
+                    for: entry.primaryRoute,
+                    dayType: entry.dayType,
+                    currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
+                    limit: 2
+                )
+                if !upcoming.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Then")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                        Text(upcoming.joined(separator: " · "))
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                }
+            case .returnImmediately:
+                Text("Continuous pickup loop is active.")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            case .noMoreBuses:
+                if let last = primaryLastToday {
+                    Text("Last today was \(last)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
 
-    // MARK: Secondary stack (right) — both cards expand equally
+    private var overnightCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Service ended today")
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+
+            Spacer(minLength: 8)
+
+            Text("FIRST TOMORROW")
+                .font(.system(size: 9, weight: .heavy))
+                .tracking(0.9)
+                .foregroundStyle(.secondary)
+
+            if let first = primaryTomorrowFirst {
+                Text(first)
+                    .font(.system(size: 40, weight: .ultraLight, design: .rounded))
+                    .monospacedDigit()
+                    .kerning(-1.2)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            } else {
+                Text("Service resumes tomorrow")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 8)
+
+            VStack(alignment: .leading, spacing: 4) {
+                if let last = primaryLastToday {
+                    Text("Last today was \(last)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                if let oppositeFirst = oppositeTomorrowFirst {
+                    Text("Other direction first \(oppositeFirst)")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(
+            ContainerRelativeShape()
+                .fill(Color.primary.opacity(0.04))
+        )
+    }
 
     private var secondaryStack: some View {
         VStack(spacing: 6) {
-            secondaryCard(
+            routeSecondaryCard(
                 title: WidgetTheme.routeLabel(for: oppositeRoute),
                 state: oppositeState
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            secondaryCard(
-                title: "Then",
-                state: secondThenState()
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            switch layoutState {
+            case .lastDeparture:
+                infoSecondaryCard(
+                    title: "Tomorrow first",
+                    time: primaryTomorrowFirst
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .default:
+                genericSecondaryCard(
+                    title: "Then",
+                    state: secondThenState()
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            case .overnightEnded:
+                EmptyView()
+            }
         }
     }
 
-    /// Compute the immediate follow-up departure for the opposite direction.
-    /// Falls through to the same route's second upcoming if the opposite
-    /// direction has no follow-up departure available.
     private func secondThenState() -> NextDepartureState {
         let oppositeUpcoming = Schedule.upcomingDepartures(
             for: oppositeRoute,
@@ -250,6 +380,7 @@ struct MediumWidgetView: View {
            let secondsFromMidnight = Schedule.secondsFromTimeString(nextFollowUp) {
             return .scheduled(time: nextFollowUp, departureSecondsFromMidnight: secondsFromMidnight)
         }
+
         let primaryUpcoming = Schedule.upcomingDepartures(
             for: entry.primaryRoute,
             dayType: entry.dayType,
@@ -260,10 +391,44 @@ struct MediumWidgetView: View {
            let secondsFromMidnight = Schedule.secondsFromTimeString(primaryUpcoming[1]) {
             return .scheduled(time: primaryUpcoming[1], departureSecondsFromMidnight: secondsFromMidnight)
         }
+
         return .noMoreBuses
     }
 
-    private func secondaryCard(title: String, state: NextDepartureState) -> some View {
+    private func routeSecondaryCard(title: String, state: NextDepartureState) -> some View {
+        secondaryCard(title: title) {
+            secondaryBody(state: state, noMoreStyle: .serviceEnded)
+        }
+    }
+
+    private func genericSecondaryCard(title: String, state: NextDepartureState) -> some View {
+        secondaryCard(title: title) {
+            secondaryBody(state: state, noMoreStyle: .dash)
+        }
+    }
+
+    private func infoSecondaryCard(title: String, time: String?) -> some View {
+        secondaryCard(title: title) {
+            if let time {
+                Text(time)
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            } else {
+                Text("Unavailable")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+    }
+
+    private func secondaryCard<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
                 .font(.system(size: 10, weight: .semibold))
@@ -273,7 +438,7 @@ struct MediumWidgetView: View {
 
             Spacer(minLength: 0)
 
-            secondaryBody(state: state)
+            content()
         }
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -284,7 +449,10 @@ struct MediumWidgetView: View {
     }
 
     @ViewBuilder
-    private func secondaryBody(state: NextDepartureState) -> some View {
+    private func secondaryBody(
+        state: NextDepartureState,
+        noMoreStyle: SecondaryNoMoreStyle
+    ) -> some View {
         switch state {
         case let .scheduled(time, departureSeconds):
             let remaining = Schedule.secondsRemaining(
@@ -305,14 +473,38 @@ struct MediumWidgetView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+
         case .returnImmediately:
             Text("Loop active")
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.green)
+
         case .noMoreBuses:
-            Text("—")
-                .font(.system(size: 22, weight: .semibold, design: .rounded))
-                .foregroundStyle(.tertiary)
+            switch noMoreStyle {
+            case .dash:
+                Text("—")
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            case .serviceEnded:
+                Text("Service ended")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+            }
         }
+    }
+
+    private func statusBadge(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 8, weight: .heavy))
+            .tracking(0.7)
+            .foregroundStyle(Color.orange)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(
+                Capsule()
+                    .fill(Color.orange.opacity(0.16))
+            )
     }
 }

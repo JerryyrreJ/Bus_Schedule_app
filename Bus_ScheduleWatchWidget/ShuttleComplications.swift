@@ -14,7 +14,7 @@ struct ShuttleWatchCircular: Widget {
     let kind = "ShuttleWatchCircular"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: ShuttleProvider()) { entry in
+        StaticConfiguration(kind: kind, provider: WatchComplicationProvider()) { entry in
             WatchCircularView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
