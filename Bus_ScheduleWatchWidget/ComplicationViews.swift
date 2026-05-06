@@ -22,12 +22,15 @@ struct WatchCircularView: View {
             dayType: entry.dayType,
             at: entry.date
         ) {
-        case let .scheduled(_, departureDate, gaugeStartDate):
+        case let .scheduled(departureTime, departureDate, gaugeStartDate):
             if let gaugeStartDate {
                 Gauge(value: 1) {
                     EmptyView()
                 } currentValueLabel: {
-                    circularCenterLabel(for: departureDate)
+                    circularCountdownLabel(
+                        departureTime: departureTime,
+                        departureDate: departureDate
+                    )
                 } minimumValueLabel: {
                     EmptyView()
                 } maximumValueLabel: {
@@ -42,7 +45,10 @@ struct WatchCircularView: View {
                 }
             } else {
                 staticRing {
-                    circularCenterLabel(for: departureDate)
+                    circularCountdownLabel(
+                        departureTime: departureTime,
+                        departureDate: departureDate
+                    )
                 }
             }
 
@@ -50,57 +56,110 @@ struct WatchCircularView: View {
             Gauge(value: 1) {
                 EmptyView()
             } currentValueLabel: {
-                VStack(spacing: 1) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text("Loop")
-                        .font(.system(size: 11, weight: .semibold))
-                }
+                circularStatusLabel(
+                    primary: "Loop",
+                    secondary: Schedule.returnImmediatelyDeadline(
+                        dayType: entry.dayType,
+                        currentSecondsFromMidnight: entry.currentSecondsFromMidnight
+                    )
+                )
             }
             .gaugeStyle(.accessoryCircular)
             .tint(.primary)
 
-        case let .beforeFirstDeparture(_, departureDate):
+        case let .beforeFirstDeparture(departureTime, departureDate):
             staticRing {
-                circularCenterLabel(for: departureDate)
+                circularCountdownLabel(
+                    departureTime: departureTime,
+                    departureDate: departureDate
+                )
             }
 
         case .noMoreBuses:
             staticRing {
-                VStack(spacing: 1) {
-                    Image(systemName: "moon.fill")
-                        .font(.system(size: 11, weight: .semibold))
-                    Text("Done")
-                        .font(.system(size: 10, weight: .semibold))
-                }
+                let nextDay = Schedule.nextDayType(after: entry.date)
+                circularStatusLabel(
+                    primary: "Done",
+                    secondary: Schedule.firstDeparture(
+                        for: entry.primaryRoute,
+                        dayType: nextDay.dayType
+                    )
+                )
             }
         }
     }
 
-    @ViewBuilder
-    private func circularCenterLabel(for departureDate: Date) -> some View {
+    private func circularCountdownLabel(
+        departureTime: String,
+        departureDate: Date
+    ) -> some View {
         let remaining = max(0, Int(departureDate.timeIntervalSince(entry.date)))
 
-        VStack(spacing: 1) {
-            Image(systemName: WidgetTheme.busSymbol)
-                .font(.system(size: 10, weight: .semibold))
+        return VStack(spacing: -1) {
+            circularPrimaryText(for: departureDate, remaining: remaining)
+                .font(.system(size: circularPrimaryFontSize(for: remaining), weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
 
-            if remaining <= 0 {
-                Text("Now")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.7)
-            } else if remaining <= 60 {
-                Text(departureDate, style: .timer)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+            Text(departureTime)
+                .font(.system(size: 8, weight: .medium, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
+    private func circularStatusLabel(primary: String, secondary: String?) -> some View {
+        VStack(spacing: -1) {
+            Text(primary)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+
+            if let secondary {
+                Text(secondary)
+                    .font(.system(size: 8, weight: .medium, design: .rounded))
                     .monospacedDigit()
-                    .minimumScaleFactor(0.7)
-            } else {
-                Text("\(Int(ceil(Double(remaining) / 60.0)))m")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
         }
+    }
+
+    private func circularPrimaryText(for departureDate: Date, remaining: Int) -> Text {
+        if remaining <= 0 {
+            return Text("Now")
+        }
+
+        if remaining < 3600 {
+            return Text(departureDate, style: .timer)
+        }
+
+        return Text(compactCircularDurationString(for: remaining))
+    }
+
+    private func circularPrimaryFontSize(for remaining: Int) -> CGFloat {
+        remaining < 3600 ? 15 : 16
+    }
+
+    private func compactCircularDurationString(for seconds: Int) -> String {
+        let totalMinutes = Int(ceil(Double(max(seconds, 0)) / 60.0))
+
+        if totalMinutes < 60 {
+            return "\(totalMinutes)m"
+        }
+
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+
+        if minutes == 0 {
+            return "\(hours)h"
+        }
+
+        return String(format: "%dh%02d", hours, minutes)
     }
 
     private func staticRing<Content: View>(@ViewBuilder content: () -> Content) -> some View {
