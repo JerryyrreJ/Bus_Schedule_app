@@ -36,6 +36,7 @@ struct WatchComplicationProvider: TimelineProvider {
             guard let next = Schedule.nextInterestingRefreshDate(
                 for: SharedStore.readPrimaryRoute(),
                 dayType: resolved.dayType,
+                isManualOverride: resolved.isManualOverride,
                 after: cursor
             ) else {
                 break

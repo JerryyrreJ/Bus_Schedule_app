@@ -266,7 +266,12 @@ struct WatchContentView: View {
 
     @ViewBuilder
     private func noMoreBusesBlock(date: Date) -> some View {
-        let nextDay = Schedule.nextDayType(after: date)
+        let resolved = DayType.effective(for: date)
+        let nextDay = Schedule.nextServiceDay(
+            after: date,
+            currentDayType: resolved.dayType,
+            isManualOverride: resolved.isManualOverride
+        )
         let firstTime = Schedule.firstDeparture(for: primaryRoute, dayType: nextDay.dayType)
 
         Text("Service ended")

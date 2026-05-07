@@ -87,7 +87,11 @@ struct LockRectangularView: View {
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                     if let first = Schedule.firstDeparture(
                         for: entry.primaryRoute,
-                        dayType: Schedule.nextDayType(after: entry.date).dayType
+                        dayType: Schedule.nextServiceDay(
+                            after: entry.date,
+                            currentDayType: entry.dayType,
+                            isManualOverride: entry.isManualOverride
+                        ).dayType
                     ) {
                         Text("First tomorrow \(first)")
                             .font(.system(size: 12))
@@ -141,7 +145,11 @@ struct LockCircularView: View {
                     .font(.system(size: 12, weight: .semibold))
                 if let first = Schedule.firstDeparture(
                     for: entry.primaryRoute,
-                    dayType: Schedule.nextDayType(after: entry.date).dayType
+                    dayType: Schedule.nextServiceDay(
+                        after: entry.date,
+                        currentDayType: entry.dayType,
+                        isManualOverride: entry.isManualOverride
+                    ).dayType
                 ) {
                     Text(first)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))

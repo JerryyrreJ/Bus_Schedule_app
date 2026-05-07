@@ -75,7 +75,11 @@ struct MediumWidgetView: View {
     // Manual override should keep using the currently forced day type when
     // computing "tomorrow first" in the medium widget's night states.
     private var nextServiceDayType: DayType {
-        entry.isManualOverride ? entry.dayType : Schedule.nextDayType(after: entry.date).dayType
+        Schedule.nextServiceDay(
+            after: entry.date,
+            currentDayType: entry.dayType,
+            isManualOverride: entry.isManualOverride
+        ).dayType
     }
 
     private var primaryTomorrowFirst: String? {

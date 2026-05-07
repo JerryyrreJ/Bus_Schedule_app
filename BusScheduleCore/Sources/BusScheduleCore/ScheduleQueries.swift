@@ -69,12 +69,6 @@ public extension Schedule {
                   currentSecondsFromMidnight < endSeconds else {
                 continue
             }
-            for j in (index + 1)..<schedule.count {
-                let t = schedule[j].phI
-                if !t.isEmpty && t != "Return Immediately" {
-                    return t
-                }
-            }
             return schedule[index + 1].phII
         }
         return nil
@@ -84,6 +78,17 @@ public extension Schedule {
         let calendar = Calendar.current
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
         return (DayType.automatic(for: tomorrow), tomorrow)
+    }
+
+    static func nextServiceDay(
+        after referenceDate: Date,
+        currentDayType: DayType,
+        isManualOverride: Bool
+    ) -> (dayType: DayType, date: Date) {
+        let calendar = Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
+        let dayType = isManualOverride ? currentDayType : DayType.automatic(for: tomorrow)
+        return (dayType, tomorrow)
     }
 
     static func secondsFromMidnight(for date: Date) -> Int {
@@ -174,6 +179,7 @@ public extension Schedule {
     static func nextInterestingRefreshDate(
         for location: Location,
         dayType: DayType,
+        isManualOverride: Bool = false,
         after date: Date
     ) -> Date? {
         let currentSecondsFromMidnight = secondsFromMidnight(for: date)
@@ -181,9 +187,21 @@ public extension Schedule {
 
         switch circularComplicationState(for: location, dayType: dayType, at: date) {
         case let .scheduled(_, departureDate, _):
+            if let nextBoundary = nextHourlyCountdownRefreshDate(
+                departureDate: departureDate,
+                referenceDate: date
+            ) {
+                return nextBoundary
+            }
             return departureDate.addingTimeInterval(1)
 
         case let .beforeFirstDeparture(_, departureDate):
+            if let nextBoundary = nextHourlyCountdownRefreshDate(
+                departureDate: departureDate,
+                referenceDate: date
+            ) {
+                return nextBoundary
+            }
             return departureDate.addingTimeInterval(1)
 
         case .returnImmediately:
@@ -197,7 +215,11 @@ public extension Schedule {
             return nil
 
         case .noMoreBuses:
-            let next = nextDayType(after: date)
+            let next = nextServiceDay(
+                after: date,
+                currentDayType: dayType,
+                isManualOverride: isManualOverride
+            )
             guard let first = firstDeparture(for: location, dayType: next.dayType),
                   let firstSeconds = secondsFromTimeString(first) else {
                 return nil
@@ -205,6 +227,21 @@ public extension Schedule {
             return Calendar.current.startOfDay(for: next.date)
                 .addingTimeInterval(TimeInterval(firstSeconds))
         }
+    }
+
+    private static func nextHourlyCountdownRefreshDate(
+        departureDate: Date,
+        referenceDate: Date
+    ) -> Date? {
+        let remaining = max(0, Int(departureDate.timeIntervalSince(referenceDate)))
+        guard remaining > 3600 else { return nil }
+
+        let displayedHours = Int(ceil(Double(remaining) / 3600.0))
+        let nextBoundary = departureDate
+            .addingTimeInterval(-TimeInterval((displayedHours - 1) * 3600))
+            .addingTimeInterval(1)
+
+        return nextBoundary > referenceDate ? nextBoundary : nil
     }
 
     /// Seconds-from-midnight of the most recent departure that has already left

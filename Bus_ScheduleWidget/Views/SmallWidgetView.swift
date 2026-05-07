@@ -133,7 +133,11 @@ struct SmallWidgetView: View {
     }
 
     private var noMoreBusesBlock: some View {
-        let nextDay = Schedule.nextDayType(after: entry.date)
+        let nextDay = Schedule.nextServiceDay(
+            after: entry.date,
+            currentDayType: entry.dayType,
+            isManualOverride: entry.isManualOverride
+        )
         let firstTime = Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextDay.dayType)
 
         return VStack(alignment: .leading, spacing: 4) {

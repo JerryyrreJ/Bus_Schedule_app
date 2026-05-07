@@ -22,15 +22,12 @@ struct WatchCircularView: View {
             dayType: entry.dayType,
             at: entry.date
         ) {
-        case let .scheduled(departureTime, departureDate, gaugeStartDate):
+        case let .scheduled(_, departureDate, gaugeStartDate):
             if let gaugeStartDate {
                 Gauge(value: 1) {
                     EmptyView()
                 } currentValueLabel: {
-                    circularCountdownLabel(
-                        departureTime: departureTime,
-                        departureDate: departureDate
-                    )
+                    circularCountdownLabel(departureDate: departureDate)
                 } minimumValueLabel: {
                     EmptyView()
                 } maximumValueLabel: {
@@ -45,10 +42,7 @@ struct WatchCircularView: View {
                 }
             } else {
                 staticRing {
-                    circularCountdownLabel(
-                        departureTime: departureTime,
-                        departureDate: departureDate
-                    )
+                    circularCountdownLabel(departureDate: departureDate)
                 }
             }
 
@@ -56,77 +50,38 @@ struct WatchCircularView: View {
             Gauge(value: 1) {
                 EmptyView()
             } currentValueLabel: {
-                circularStatusLabel(
-                    primary: "Loop",
-                    secondary: Schedule.returnImmediatelyDeadline(
-                        dayType: entry.dayType,
-                        currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-                    )
-                )
+                circularStatusLabel(primary: "Loop")
             }
             .gaugeStyle(.accessoryCircular)
             .tint(.primary)
 
-        case let .beforeFirstDeparture(departureTime, departureDate):
+        case let .beforeFirstDeparture(_, departureDate):
             staticRing {
-                circularCountdownLabel(
-                    departureTime: departureTime,
-                    departureDate: departureDate
-                )
+                circularCountdownLabel(departureDate: departureDate)
             }
 
         case .noMoreBuses:
             staticRing {
-                let nextDay = Schedule.nextDayType(after: entry.date)
-                circularStatusLabel(
-                    primary: "Done",
-                    secondary: Schedule.firstDeparture(
-                        for: entry.primaryRoute,
-                        dayType: nextDay.dayType
-                    )
-                )
+                circularStatusLabel(primary: "Done")
             }
         }
     }
 
-    private func circularCountdownLabel(
-        departureTime: String,
-        departureDate: Date
-    ) -> some View {
+    private func circularCountdownLabel(departureDate: Date) -> some View {
         let remaining = max(0, Int(departureDate.timeIntervalSince(entry.date)))
 
-        return VStack(spacing: -1) {
-            circularPrimaryText(for: departureDate, remaining: remaining)
-                .font(.system(size: circularPrimaryFontSize(for: remaining), weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.55)
-
-            Text(departureTime)
-                .font(.system(size: 8, weight: .medium, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
+        return circularPrimaryText(for: departureDate, remaining: remaining)
+            .font(.system(size: circularPrimaryFontSize(for: remaining), weight: .bold, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.55)
     }
 
-    private func circularStatusLabel(primary: String, secondary: String?) -> some View {
-        VStack(spacing: -1) {
-            Text(primary)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-
-            if let secondary {
-                Text(secondary)
-                    .font(.system(size: 8, weight: .medium, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-        }
+    private func circularStatusLabel(primary: String) -> some View {
+        Text(primary)
+            .font(.system(size: 15, weight: .bold, design: .rounded))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
     }
 
     private func circularPrimaryText(for departureDate: Date, remaining: Int) -> Text {
@@ -142,24 +97,12 @@ struct WatchCircularView: View {
     }
 
     private func circularPrimaryFontSize(for remaining: Int) -> CGFloat {
-        remaining < 3600 ? 15 : 16
+        remaining < 3600 ? 17 : 16
     }
 
     private func compactCircularDurationString(for seconds: Int) -> String {
-        let totalMinutes = Int(ceil(Double(max(seconds, 0)) / 60.0))
-
-        if totalMinutes < 60 {
-            return "\(totalMinutes)m"
-        }
-
-        let hours = totalMinutes / 60
-        let minutes = totalMinutes % 60
-
-        if minutes == 0 {
-            return "\(hours)h"
-        }
-
-        return String(format: "%dh%02d", hours, minutes)
+        let roundedHours = Int(ceil(Double(max(seconds, 0)) / 3600.0))
+        return "\(roundedHours)H"
     }
 
     private func staticRing<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -245,9 +188,14 @@ struct WatchRectangularView: View {
             case .noMoreBuses:
                 Text("Service ended")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
+                let nextDay = Schedule.nextServiceDay(
+                    after: entry.date,
+                    currentDayType: entry.dayType,
+                    isManualOverride: entry.isManualOverride
+                )
                 if let first = Schedule.firstDeparture(
                     for: entry.primaryRoute,
-                    dayType: Schedule.nextDayType(after: entry.date).dayType
+                    dayType: nextDay.dayType
                 ) {
                     Text("First tomorrow \(first)")
                         .font(.system(size: 11))
