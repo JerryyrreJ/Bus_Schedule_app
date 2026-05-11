@@ -138,18 +138,18 @@ struct SmallWidgetView: View {
             currentDayType: entry.dayType,
             isManualOverride: entry.isManualOverride
         )
-        let firstTime = Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextDay.dayType)
+        let serviceStart = Schedule.firstServiceStart(for: entry.primaryRoute, dayType: nextDay.dayType)
 
         return VStack(alignment: .leading, spacing: 4) {
             Text("Service ended")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
-            if let firstTime {
+            if let serviceStart {
                 Text("FIRST TOMORROW")
                     .font(.system(size: 9, weight: .heavy))
                     .tracking(1.2)
                     .foregroundStyle(.secondary)
-                Text(firstTime)
+                Text(serviceStart.displayText)
                     .font(.system(size: 30, weight: .ultraLight, design: .rounded))
                     .monospacedDigit()
                     .kerning(-1.0)

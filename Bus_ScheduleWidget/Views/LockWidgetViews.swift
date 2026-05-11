@@ -85,7 +85,7 @@ struct LockRectangularView: View {
                 case .noMoreBuses:
                     Text("Service ended")
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    if let first = Schedule.firstDeparture(
+                    if let serviceStart = Schedule.firstServiceStart(
                         for: entry.primaryRoute,
                         dayType: Schedule.nextServiceDay(
                             after: entry.date,
@@ -93,7 +93,7 @@ struct LockRectangularView: View {
                             isManualOverride: entry.isManualOverride
                         ).dayType
                     ) {
-                        Text("First tomorrow \(first)")
+                        Text("First tomorrow \(serviceStart.displayText)")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
@@ -143,7 +143,7 @@ struct LockCircularView: View {
             case .noMoreBuses:
                 Image(systemName: "moon.fill")
                     .font(.system(size: 12, weight: .semibold))
-                if let first = Schedule.firstDeparture(
+                if let serviceStart = Schedule.firstServiceStart(
                     for: entry.primaryRoute,
                     dayType: Schedule.nextServiceDay(
                         after: entry.date,
@@ -151,7 +151,7 @@ struct LockCircularView: View {
                         isManualOverride: entry.isManualOverride
                     ).dayType
                 ) {
-                    Text(first)
+                    Text(serviceStart.compactDisplayText)
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .minimumScaleFactor(0.7)

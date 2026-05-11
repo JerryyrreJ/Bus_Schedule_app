@@ -6,6 +6,7 @@ let package = Package(
     platforms: [
         .iOS(.v18),
         .watchOS(.v10),
+        .macOS(.v14),
     ],
     products: [
         .library(
@@ -17,6 +18,10 @@ let package = Package(
         .target(
             name: "BusScheduleCore",
             dependencies: []
+        ),
+        .testTarget(
+            name: "BusScheduleCoreTests",
+            dependencies: ["BusScheduleCore"]
         ),
     ]
 )

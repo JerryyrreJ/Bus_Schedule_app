@@ -82,12 +82,12 @@ struct MediumWidgetView: View {
         ).dayType
     }
 
-    private var primaryTomorrowFirst: String? {
-        Schedule.firstDeparture(for: entry.primaryRoute, dayType: nextServiceDayType)
+    private var primaryTomorrowServiceStart: ServiceStart? {
+        Schedule.firstServiceStart(for: entry.primaryRoute, dayType: nextServiceDayType)
     }
 
-    private var oppositeTomorrowFirst: String? {
-        Schedule.firstDeparture(for: oppositeRoute, dayType: nextServiceDayType)
+    private var oppositeTomorrowServiceStart: ServiceStart? {
+        Schedule.firstServiceStart(for: oppositeRoute, dayType: nextServiceDayType)
     }
 
     private var primaryLastToday: String? {
@@ -230,13 +230,13 @@ struct MediumWidgetView: View {
                 Text("Service ended")
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
-                if let first = primaryTomorrowFirst {
+                if let serviceStart = primaryTomorrowServiceStart {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text("FIRST TOMORROW")
                             .font(.system(size: 8, weight: .heavy))
                             .tracking(0.8)
                             .foregroundStyle(.secondary)
-                        Text(first)
+                        Text(serviceStart.displayText)
                             .font(.system(size: 24, weight: .ultraLight, design: .rounded))
                             .monospacedDigit()
                             .foregroundStyle(.primary)
@@ -306,8 +306,8 @@ struct MediumWidgetView: View {
                 .tracking(0.9)
                 .foregroundStyle(.secondary)
 
-            if let first = primaryTomorrowFirst {
-                Text(first)
+            if let serviceStart = primaryTomorrowServiceStart {
+                Text(serviceStart.displayText)
                     .font(.system(size: 40, weight: .ultraLight, design: .rounded))
                     .monospacedDigit()
                     .kerning(-1.2)
@@ -330,8 +330,8 @@ struct MediumWidgetView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-                if let oppositeFirst = oppositeTomorrowFirst {
-                    Text("Other direction first \(oppositeFirst)")
+                if let oppositeServiceStart = oppositeTomorrowServiceStart {
+                    Text("Other direction first \(oppositeServiceStart.displayText)")
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -358,7 +358,7 @@ struct MediumWidgetView: View {
             case .lastDeparture:
                 infoSecondaryCard(
                     title: "Tomorrow first",
-                    time: primaryTomorrowFirst
+                    serviceStart: primaryTomorrowServiceStart
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .default:
@@ -411,10 +411,10 @@ struct MediumWidgetView: View {
         }
     }
 
-    private func infoSecondaryCard(title: String, time: String?) -> some View {
+    private func infoSecondaryCard(title: String, serviceStart: ServiceStart?) -> some View {
         secondaryCard(title: title) {
-            if let time {
-                Text(time)
+            if let serviceStart {
+                Text(serviceStart.displayText)
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(.primary)

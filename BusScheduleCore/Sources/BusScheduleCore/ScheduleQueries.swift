@@ -34,6 +34,38 @@ public enum CircularComplicationState: Sendable {
     case noMoreBuses
 }
 
+public enum ServiceStart: Sendable, Equatable {
+    case scheduled(time: String)
+    case returnImmediately(startTime: String)
+
+    public var startTime: String {
+        switch self {
+        case let .scheduled(time):
+            return time
+        case let .returnImmediately(startTime):
+            return startTime
+        }
+    }
+
+    public var displayText: String {
+        switch self {
+        case let .scheduled(time):
+            return time
+        case let .returnImmediately(startTime):
+            return "\(startTime) Loop"
+        }
+    }
+
+    public var compactDisplayText: String {
+        switch self {
+        case let .scheduled(time):
+            return time
+        case let .returnImmediately(startTime):
+            return startTime
+        }
+    }
+}
+
 public extension Schedule {
 
     static func firstDeparture(for location: Location, dayType: DayType) -> String? {
@@ -41,6 +73,26 @@ public extension Schedule {
             let t = location == .phIINewCampus ? busTime.phII : busTime.phI
             if !t.isEmpty && t != "Return Immediately" { return t }
         }
+        return nil
+    }
+
+    static func firstServiceStart(for location: Location, dayType: DayType) -> ServiceStart? {
+        for busTime in getCurrentSchedule(dayType) {
+            let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
+
+            if location == .phIParkingLot,
+               timeString == "Return Immediately",
+               secondsFromTimeString(busTime.phII) != nil {
+                return .returnImmediately(startTime: busTime.phII)
+            }
+
+            if !timeString.isEmpty,
+               timeString != "Return Immediately",
+               secondsFromTimeString(timeString) != nil {
+                return .scheduled(time: timeString)
+            }
+        }
+
         return nil
     }
 
@@ -220,8 +272,8 @@ public extension Schedule {
                 currentDayType: dayType,
                 isManualOverride: isManualOverride
             )
-            guard let first = firstDeparture(for: location, dayType: next.dayType),
-                  let firstSeconds = secondsFromTimeString(first) else {
+            guard let first = firstServiceStart(for: location, dayType: next.dayType),
+                  let firstSeconds = secondsFromTimeString(first.startTime) else {
                 return nil
             }
             return Calendar.current.startOfDay(for: next.date)

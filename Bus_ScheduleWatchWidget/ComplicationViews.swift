@@ -61,8 +61,17 @@ struct WatchCircularView: View {
             }
 
         case .noMoreBuses:
+            let nextDay = Schedule.nextServiceDay(
+                after: entry.date,
+                currentDayType: entry.dayType,
+                isManualOverride: entry.isManualOverride
+            )
+            let serviceStart = Schedule.firstServiceStart(
+                for: entry.primaryRoute,
+                dayType: nextDay.dayType
+            )
             staticRing {
-                circularStatusLabel(primary: "Done")
+                circularStatusLabel(primary: serviceStart?.compactDisplayText ?? "Done")
             }
         }
     }
@@ -193,11 +202,11 @@ struct WatchRectangularView: View {
                     currentDayType: entry.dayType,
                     isManualOverride: entry.isManualOverride
                 )
-                if let first = Schedule.firstDeparture(
+                if let serviceStart = Schedule.firstServiceStart(
                     for: entry.primaryRoute,
                     dayType: nextDay.dayType
                 ) {
-                    Text("First tomorrow \(first)")
+                    Text("First tomorrow \(serviceStart.displayText)")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
