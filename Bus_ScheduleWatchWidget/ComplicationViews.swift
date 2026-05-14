@@ -24,22 +24,13 @@ struct WatchCircularView: View {
         ) {
         case let .scheduled(_, departureDate, gaugeStartDate):
             if let gaugeStartDate {
-                Gauge(value: 1) {
+                ProgressView(timerInterval: gaugeStartDate...departureDate, countsDown: false) {
                     EmptyView()
                 } currentValueLabel: {
                     circularCountdownLabel(departureDate: departureDate)
-                } minimumValueLabel: {
-                    EmptyView()
-                } maximumValueLabel: {
-                    EmptyView()
                 }
-                .gaugeStyle(.accessoryCircular)
+                .progressViewStyle(.circular)
                 .tint(.primary)
-                .overlay {
-                    ProgressView(timerInterval: gaugeStartDate...departureDate, countsDown: false)
-                        .progressViewStyle(.circular)
-                        .tint(.clear)
-                }
             } else {
                 staticRing {
                     circularCountdownLabel(departureDate: departureDate)
@@ -99,7 +90,8 @@ struct WatchCircularView: View {
         }
 
         if remaining < 3600 {
-            return Text(departureDate, style: .timer)
+            let minutes = Int(ceil(Double(remaining) / 60.0))
+            return Text("\(minutes)m")
         }
 
         return Text(compactCircularDurationString(for: remaining))
@@ -137,83 +129,119 @@ struct WatchRectangularView: View {
             currentSecondsFromMidnight: entry.currentSecondsFromMidnight
         )
 
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: WidgetTheme.busSymbol)
                     .font(.system(size: 11, weight: .semibold))
-                Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
+                Text(WidgetTheme.minimalRouteLabel(for: entry.primaryRoute))
                     .font(.system(size: 11, weight: .semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
             .foregroundStyle(.secondary)
 
-            switch state {
-            case let .scheduled(time, departureSeconds):
-                let remaining = Schedule.secondsRemaining(
-                    until: departureSeconds,
-                    from: entry.currentSecondsFromMidnight
-                )
-                Text(time)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-
-                HStack(spacing: 4) {
-                    Text("in")
-                        .foregroundStyle(.secondary)
-                    Text(CountdownFormatter.string(forSeconds: remaining))
-                        .fontWeight(.bold)
-                        .monospacedDigit()
-                    if let then = Schedule.upcomingDepartures(
-                        for: entry.primaryRoute,
-                        dayType: entry.dayType,
-                        currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
-                        limit: 1
-                    ).first {
-                        Text("· then \(then)")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    }
-                }
-                .font(.system(size: 11, weight: .medium))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            case .returnImmediately:
-                Text("Return Immediately")
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if let deadline = Schedule.returnImmediatelyDeadline(
-                    dayType: entry.dayType,
-                    currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-                ) {
-                    Text("Until \(deadline)")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-
-            case .noMoreBuses:
-                Text("Service ended")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                let nextDay = Schedule.nextServiceDay(
-                    after: entry.date,
-                    currentDayType: entry.dayType,
-                    isManualOverride: entry.isManualOverride
-                )
-                if let serviceStart = Schedule.firstServiceStart(
-                    for: entry.primaryRoute,
-                    dayType: nextDay.dayType
-                ) {
-                    Text("First tomorrow \(serviceStart.displayText)")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                heroLeft(for: state)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                detailRight(for: state)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func heroLeft(for state: NextDepartureState) -> some View {
+        switch state {
+        case let .scheduled(_, departureSeconds):
+            let remaining = Schedule.secondsRemaining(
+                until: departureSeconds,
+                from: entry.currentSecondsFromMidnight
+            )
+            Text(CountdownFormatter.string(forSeconds: remaining))
+                .font(.system(size: 26, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+
+        case .returnImmediately:
+            Text("Loop active")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+
+        case .noMoreBuses:
+            Text("Service ended")
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
+        }
+    }
+
+    @ViewBuilder
+    private func detailRight(for state: NextDepartureState) -> some View {
+        switch state {
+        case let .scheduled(time, _):
+            if let then = Schedule.upcomingDepartures(
+                for: entry.primaryRoute,
+                dayType: entry.dayType,
+                currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
+                limit: 1
+            ).first {
+                (Text(time)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                + Text(" · ")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                + Text(then)
+                    .font(.system(size: 12, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            } else {
+                Text(time)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+
+        case .returnImmediately:
+            if let deadline = Schedule.returnImmediatelyDeadline(
+                dayType: entry.dayType,
+                currentSecondsFromMidnight: entry.currentSecondsFromMidnight
+            ) {
+                (Text("until ")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                + Text(deadline)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+
+        case .noMoreBuses:
+            let nextDay = Schedule.nextServiceDay(
+                after: entry.date,
+                currentDayType: entry.dayType,
+                isManualOverride: entry.isManualOverride
+            )
+            if let serviceStart = Schedule.firstServiceStart(
+                for: entry.primaryRoute,
+                dayType: nextDay.dayType
+            ) {
+                (Text("tmrw ")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                + Text(serviceStart.displayText)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .monospacedDigit())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
+        }
     }
 }
 

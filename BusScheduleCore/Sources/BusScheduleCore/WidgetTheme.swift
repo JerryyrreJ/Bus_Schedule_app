@@ -21,6 +21,12 @@ public enum WidgetTheme {
         location == .phIINewCampus ? "Ph II→I" : "Ph I→II"
     }
 
+    /// Numeric-only label for the rectangular complication header where the
+    /// surrounding context already implies a campus shuttle.
+    public static func minimalRouteLabel(for location: Location) -> String {
+        location == .phIINewCampus ? "2 → 1" : "1 → 2"
+    }
+
     /// Direction-coded accent. Matches NextBusView.accentColor.
     public static func accentColor(for location: Location) -> Color {
         location == .phIINewCampus ? .green : .blue
