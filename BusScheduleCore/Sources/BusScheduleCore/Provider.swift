@@ -43,11 +43,29 @@ public struct ShuttleProvider: TimelineProvider {
     }
 
     public func getSnapshot(in context: Context, completion: @escaping (ShuttleEntry) -> Void) {
-        completion(snapshot(at: Date()))
+        completion(Self.snapshot(at: Date()))
     }
 
     public func getTimeline(in context: Context, completion: @escaping (Timeline<ShuttleEntry>) -> Void) {
-        let now = Date()
+        completion(Self.makeTimeline(from: Date()))
+    }
+
+    /// Builds a single entry for the given moment. Exposed so the
+    /// intent-based provider in the widget target can reuse the same logic.
+    public static func snapshot(at date: Date) -> ShuttleEntry {
+        let resolved = DayType.effective(for: date)
+        return ShuttleEntry(
+            date: date,
+            primaryRoute: SharedStore.readPrimaryRoute(),
+            dayType: resolved.dayType,
+            isManualOverride: resolved.isManualOverride
+        )
+    }
+
+    /// Builds the full timeline: minute-resolution entries for the first
+    /// hour, then 5-minute entries for the next three hours, and a 4-hour
+    /// refresh policy. Exposed for the intent-based provider.
+    public static func makeTimeline(from now: Date) -> Timeline<ShuttleEntry> {
         var entries: [ShuttleEntry] = []
 
         for i in 0..<60 {
@@ -60,16 +78,6 @@ public struct ShuttleProvider: TimelineProvider {
         }
 
         let nextRefresh = now.addingTimeInterval(4 * 60 * 60)
-        completion(Timeline(entries: entries, policy: .after(nextRefresh)))
-    }
-
-    private func snapshot(at date: Date) -> ShuttleEntry {
-        let resolved = DayType.effective(for: date)
-        return ShuttleEntry(
-            date: date,
-            primaryRoute: SharedStore.readPrimaryRoute(),
-            dayType: resolved.dayType,
-            isManualOverride: resolved.isManualOverride
-        )
+        return Timeline(entries: entries, policy: .after(nextRefresh))
     }
 }

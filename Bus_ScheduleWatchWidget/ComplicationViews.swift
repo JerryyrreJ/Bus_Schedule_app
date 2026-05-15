@@ -90,20 +90,15 @@ struct WatchCircularView: View {
         }
 
         if remaining < 3600 {
-            let minutes = Int(ceil(Double(remaining) / 60.0))
+            let minutes = max(1, Int(ceil(Double(remaining) / 60.0)))
             return Text("\(minutes)m")
         }
 
-        return Text(compactCircularDurationString(for: remaining))
+        return Text("1H+")
     }
 
     private func circularPrimaryFontSize(for remaining: Int) -> CGFloat {
         remaining < 3600 ? 17 : 16
-    }
-
-    private func compactCircularDurationString(for seconds: Int) -> String {
-        let roundedHours = Int(ceil(Double(max(seconds, 0)) / 3600.0))
-        return "\(roundedHours)H"
     }
 
     private func staticRing<Content: View>(@ViewBuilder content: () -> Content) -> some View {

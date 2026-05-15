@@ -57,4 +57,42 @@ struct ScheduleQueriesTests {
         #expect(refreshComponents.hour == 7)
         #expect(refreshComponents.minute == 30)
     }
+
+    @Test("Circular refresh drops from 1H+ into minute mode at the hour boundary")
+    func circularRefreshDropsIntoMinuteModeAtOneHourBoundary() throws {
+        let calendar = Calendar(identifier: .gregorian)
+        let date = try #require(calendar.date(from: DateComponents(
+            year: 2026,
+            month: 5,
+            day: 7,
+            hour: 6,
+            minute: 0,
+            second: 0
+        )))
+
+        let refreshDate = try #require(Schedule.nextInterestingRefreshDate(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            after: date
+        ))
+
+        let refreshComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: refreshDate)
+        #expect(refreshComponents.year == 2026)
+        #expect(refreshComponents.month == 5)
+        #expect(refreshComponents.day == 7)
+        #expect(refreshComponents.hour == 6)
+        #expect(refreshComponents.minute == 30)
+        #expect(refreshComponents.second == 1)
+    }
+
+    @Test("Wait progress uses the actual gap between previous and next departures")
+    func waitProgressUsesActualDepartureGap() {
+        let progress = Schedule.waitProgressFraction(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            currentSecondsFromMidnight: 9 * 3600
+        )
+
+        #expect(progress == 0.5)
+    }
 }

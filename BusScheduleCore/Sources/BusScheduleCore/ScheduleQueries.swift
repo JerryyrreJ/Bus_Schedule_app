@@ -239,7 +239,7 @@ public extension Schedule {
 
         switch circularComplicationState(for: location, dayType: dayType, at: date) {
         case let .scheduled(_, departureDate, _):
-            if let nextBoundary = nextHourlyCountdownRefreshDate(
+            if let nextBoundary = nextCircularCountdownRefreshDate(
                 departureDate: departureDate,
                 referenceDate: date
             ) {
@@ -248,7 +248,7 @@ public extension Schedule {
             return departureDate.addingTimeInterval(1)
 
         case let .beforeFirstDeparture(_, departureDate):
-            if let nextBoundary = nextHourlyCountdownRefreshDate(
+            if let nextBoundary = nextCircularCountdownRefreshDate(
                 departureDate: departureDate,
                 referenceDate: date
             ) {
@@ -281,18 +281,51 @@ public extension Schedule {
         }
     }
 
-    private static func nextHourlyCountdownRefreshDate(
+    static func waitProgressFraction(
+        for location: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int
+    ) -> Double {
+        guard case let .scheduled(_, departureSecondsFromMidnight) = nextDepartureState(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSecondsFromMidnight
+        ) else {
+            return 0
+        }
+
+        guard let previousSeconds = previousDepartureSeconds(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSecondsFromMidnight
+        ) else {
+            return 0
+        }
+
+        let total = Double(max(1, departureSecondsFromMidnight - previousSeconds))
+        let elapsed = Double(max(0, currentSecondsFromMidnight - previousSeconds))
+        return min(1.0, elapsed / total)
+    }
+
+    private static func nextCircularCountdownRefreshDate(
         departureDate: Date,
         referenceDate: Date
     ) -> Date? {
-        let remaining = max(0, Int(departureDate.timeIntervalSince(referenceDate)))
-        guard remaining > 3600 else { return nil }
+        let remaining = departureDate.timeIntervalSince(referenceDate)
+        guard remaining > 0 else { return nil }
 
-        let displayedHours = Int(ceil(Double(remaining) / 3600.0))
-        let nextBoundary = departureDate
-            .addingTimeInterval(-TimeInterval((displayedHours - 1) * 3600))
-            .addingTimeInterval(1)
+        if remaining >= 3600 {
+            let nextBoundary = departureDate.addingTimeInterval(-3599)
+            return nextBoundary > referenceDate ? nextBoundary : nil
+        }
 
+        if remaining > 60 {
+            let nextBoundary = departureDate
+                .addingTimeInterval(-TimeInterval((Int(ceil(remaining / 60.0)) - 1) * 60))
+            return nextBoundary > referenceDate ? nextBoundary : nil
+        }
+
+        let nextBoundary = departureDate.addingTimeInterval(1)
         return nextBoundary > referenceDate ? nextBoundary : nil
     }
 

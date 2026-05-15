@@ -189,9 +189,10 @@ struct NextBusView: View {
                     until: departureSecondsFromMidnight,
                     from: currentSeconds
                 ),
-                progressValue: computedProgress(
-                    until: departureSecondsFromMidnight,
-                    from: currentSeconds
+                progressValue: Schedule.waitProgressFraction(
+                    for: location,
+                    dayType: dayType,
+                    currentSecondsFromMidnight: currentSeconds
                 ),
                 upcoming: Schedule.upcomingDepartures(
                     for: location,
@@ -234,12 +235,6 @@ struct NextBusView: View {
         return "\(hours)h \(minutes)m"
     }
 
-    private func computedProgress(until departureSeconds: Int, from currentSeconds: Int) -> Double {
-        let remaining = Double(max(0, departureSeconds - currentSeconds))
-        let referenceWindow: Double = 30 * 60
-        let elapsed = max(0, referenceWindow - remaining)
-        return min(1.0, elapsed / referenceWindow)
-    }
 }
 
 private struct DisplayState {

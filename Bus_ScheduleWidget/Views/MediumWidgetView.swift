@@ -14,6 +14,7 @@ import BusScheduleCore
 
 struct MediumWidgetView: View {
     let entry: ShuttleEntry
+    var style: WidgetStyle = .card
 
     private enum LayoutState {
         case `default`
@@ -24,6 +25,26 @@ struct MediumWidgetView: View {
     private enum SecondaryNoMoreStyle {
         case dash
         case serviceEnded
+    }
+
+    @ViewBuilder
+    private var cardBackgroundContent: some View {
+        if style == .card {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.primary.opacity(0.07))
+        }
+    }
+
+    private var verticalHairline: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.12))
+            .frame(width: 0.5)
+    }
+
+    private var horizontalHairline: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.12))
+            .frame(height: 0.5)
     }
 
     private var primaryState: NextDepartureState {
@@ -114,6 +135,7 @@ struct MediumWidgetView: View {
             Spacer(minLength: 8)
             OverrideChip(dayType: entry.dayType, isManualOverride: entry.isManualOverride)
         }
+        .padding(.top, 12)
     }
 
     @ViewBuilder
@@ -127,9 +149,13 @@ struct MediumWidgetView: View {
     }
 
     private var mainGrid: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: style == .minimal ? 12 : 8) {
             primaryCard
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if style == .minimal {
+                verticalHairline
+                    .padding(.vertical, 18)
+            }
             secondaryStack
                 .frame(width: 128, alignment: .top)
         }
@@ -145,10 +171,7 @@ struct MediumWidgetView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            ContainerRelativeShape()
-                .fill(Color.primary.opacity(0.04))
-        )
+        .background { cardBackgroundContent }
     }
 
     private var routeLine: some View {
@@ -294,65 +317,74 @@ struct MediumWidgetView: View {
 
     private var overnightCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Service ended today")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-
-            Spacer(minLength: 8)
-
-            Text("FIRST TOMORROW")
-                .font(.system(size: 9, weight: .heavy))
-                .tracking(0.9)
-                .foregroundStyle(.secondary)
-
-            if let serviceStart = primaryTomorrowServiceStart {
-                Text(serviceStart.displayText)
-                    .font(.system(size: 40, weight: .ultraLight, design: .rounded))
-                    .monospacedDigit()
-                    .kerning(-1.2)
+            HStack(alignment: .top, spacing: 12) {
+                Text("Service ended today")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-            } else {
-                Text("Service resumes tomorrow")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("FIRST TOMORROW")
+                        .font(.system(size: 9, weight: .heavy))
+                        .tracking(0.9)
+                        .foregroundStyle(.secondary)
+                    if let serviceStart = primaryTomorrowServiceStart {
+                        Text(serviceStart.displayText)
+                            .font(.system(size: 28, weight: .ultraLight, design: .rounded))
+                            .monospacedDigit()
+                            .kerning(-0.8)
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                }
             }
 
             Spacer(minLength: 8)
 
-            VStack(alignment: .leading, spacing: 4) {
-                if let last = primaryLastToday {
-                    Text("Last today was \(last)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
+            if let footerText = overnightFooterText {
+                if style == .minimal {
+                    horizontalHairline
+                        .padding(.bottom, 6)
                 }
-                if let oppositeServiceStart = oppositeTomorrowServiceStart {
-                    Text("Other direction first \(oppositeServiceStart.displayText)")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
+                Text(footerText)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            ContainerRelativeShape()
-                .fill(Color.primary.opacity(0.04))
-        )
+        .background { cardBackgroundContent }
+    }
+
+    private var overnightFooterText: String? {
+        var parts: [String] = []
+        if let last = primaryLastToday {
+            parts.append("Last \(last)")
+        }
+        if let oppositeServiceStart = oppositeTomorrowServiceStart {
+            parts.append("Other \(oppositeServiceStart.displayText)")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private var secondaryStack: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: style == .minimal ? 10 : 6) {
             routeSecondaryCard(
                 title: WidgetTheme.routeLabel(for: oppositeRoute),
                 state: oppositeState
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if style == .minimal && layoutState != .overnightEnded {
+                horizontalHairline
+                    .padding(.horizontal, 12)
+            }
 
             switch layoutState {
             case .lastDeparture:
@@ -446,10 +478,7 @@ struct MediumWidgetView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            ContainerRelativeShape()
-                .fill(Color.primary.opacity(0.04))
-        )
+        .background { cardBackgroundContent }
     }
 
     @ViewBuilder
