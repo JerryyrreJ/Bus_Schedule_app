@@ -116,10 +116,10 @@ struct MediumWidgetView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: style == .minimal ? 5 : 8) {
             header
             content
-                .frame(maxHeight: .infinity)
+                .frame(maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -148,17 +148,41 @@ struct MediumWidgetView: View {
         }
     }
 
+    @ViewBuilder
     private var mainGrid: some View {
-        HStack(alignment: .top, spacing: style == .minimal ? 12 : 8) {
+        if style == .minimal {
+            minimalMainGrid
+        } else {
+            cardMainGrid
+        }
+    }
+
+    private var cardMainGrid: some View {
+        HStack(alignment: .top, spacing: mainGridSpacing) {
             primaryCard
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if style == .minimal {
-                verticalHairline
-                    .padding(.vertical, 18)
-            }
             secondaryStack
                 .frame(width: 128, alignment: .top)
         }
+    }
+
+    private var minimalMainGrid: some View {
+        HStack(alignment: .top, spacing: 8) {
+            minimalPrimaryColumn
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+            verticalHairline
+                .padding(.vertical, 8)
+
+            minimalSecondaryColumn
+                .frame(width: 126, alignment: .topLeading)
+        }
+        .padding(.top, 2)
+        .padding(.bottom, 10)
+    }
+
+    private var mainGridSpacing: CGFloat {
+        8
     }
 
     private var primaryCard: some View {
@@ -174,22 +198,23 @@ struct MediumWidgetView: View {
         .background { cardBackgroundContent }
     }
 
+    private var minimalPrimaryColumn: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            routeLine
+            primaryHeadline
+            primaryFooter
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 8)
+    }
+
     private var routeLine: some View {
         HStack(spacing: 6) {
-            HStack(spacing: 4) {
-                Text("PRIMARY")
-                    .font(.system(size: 9, weight: .heavy))
-                    .tracking(0.8)
-                    .foregroundStyle(.secondary)
-                Text("·")
-                    .font(.system(size: 9, weight: .heavy))
-                    .foregroundStyle(.tertiary)
-                Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
+            Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
             .layoutPriority(1)
 
             Spacer(minLength: 0)
@@ -374,17 +399,12 @@ struct MediumWidgetView: View {
     }
 
     private var secondaryStack: some View {
-        VStack(spacing: style == .minimal ? 10 : 6) {
+        VStack(spacing: 6) {
             routeSecondaryCard(
                 title: WidgetTheme.routeLabel(for: oppositeRoute),
                 state: oppositeState
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            if style == .minimal && layoutState != .overnightEnded {
-                horizontalHairline
-                    .padding(.horizontal, 12)
-            }
 
             switch layoutState {
             case .lastDeparture:
@@ -401,6 +421,127 @@ struct MediumWidgetView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .overnightEnded:
                 EmptyView()
+            }
+        }
+    }
+
+    private var minimalSecondaryColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            minimalSecondarySection(
+                title: WidgetTheme.routeLabel(for: oppositeRoute),
+                state: oppositeState,
+                noMoreStyle: .serviceEnded
+            )
+
+            horizontalHairline
+                .padding(.horizontal, 4)
+
+            switch layoutState {
+            case .lastDeparture:
+                minimalInfoSection(
+                    title: "Tomorrow first",
+                    serviceStart: primaryTomorrowServiceStart
+                )
+            case .default:
+                minimalSecondarySection(
+                    title: "Then",
+                    state: secondThenState(),
+                    noMoreStyle: .dash
+                )
+            case .overnightEnded:
+                EmptyView()
+            }
+        }
+        .padding(.top, 5)
+        .padding(.bottom, 12)
+    }
+
+    private func minimalInfoSection(title: String, serviceStart: ServiceStart?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            minimalSecondaryTitle(title)
+
+            if let serviceStart {
+                Text(serviceStart.displayText)
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            } else {
+                Text("Unavailable")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+        }
+    }
+
+    private func minimalSecondarySection(
+        title: String,
+        state: NextDepartureState,
+        noMoreStyle: SecondaryNoMoreStyle
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            minimalSecondaryTitle(title)
+            minimalSecondaryBody(state: state, noMoreStyle: noMoreStyle)
+        }
+    }
+
+    private func minimalSecondaryTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+    }
+
+    @ViewBuilder
+    private func minimalSecondaryBody(
+        state: NextDepartureState,
+        noMoreStyle: SecondaryNoMoreStyle
+    ) -> some View {
+        switch state {
+        case let .scheduled(time, departureSeconds):
+            let remaining = Schedule.secondsRemaining(
+                until: departureSeconds,
+                from: entry.currentSecondsFromMidnight
+            )
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(time)
+                    .font(.system(size: 21, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Text(CountdownFormatter.string(forSeconds: remaining))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+        case .returnImmediately:
+            Text("Loop active")
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(.green)
+                .lineLimit(1)
+
+        case .noMoreBuses:
+            switch noMoreStyle {
+            case .dash:
+                Text("—")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            case .serviceEnded:
+                Text("Service ended")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
         }
     }
