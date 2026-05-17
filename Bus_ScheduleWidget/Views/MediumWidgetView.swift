@@ -164,6 +164,7 @@ struct MediumWidgetView: View {
             secondaryStack
                 .frame(width: 128, alignment: .top)
         }
+        .padding(.bottom, 10)
     }
 
     private var minimalMainGrid: some View {
@@ -340,7 +341,57 @@ struct MediumWidgetView: View {
         }
     }
 
+    @ViewBuilder
     private var overnightCard: some View {
+        if style == .minimal {
+            minimalOvernightCard
+        } else {
+            cardOvernightCard
+        }
+    }
+
+    private var cardOvernightCard: some View {
+        HStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Service ended today")
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+
+                if let last = primaryLastToday {
+                    overnightDetailLine(label: "Last", value: last)
+                }
+
+                if let oppositeServiceStart = oppositeTomorrowServiceStart {
+                    overnightDetailLine(label: "Other", value: oppositeServiceStart.displayText)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            tomorrowStartBlock
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .background { cardBackgroundContent }
+    }
+
+    private func overnightDetailLine(label: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+    }
+
+    private var minimalOvernightCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 12) {
                 Text("Service ended today")
@@ -350,30 +401,14 @@ struct MediumWidgetView: View {
                     .minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text("FIRST TOMORROW")
-                        .font(.system(size: 9, weight: .heavy))
-                        .tracking(0.9)
-                        .foregroundStyle(.secondary)
-                    if let serviceStart = primaryTomorrowServiceStart {
-                        Text(serviceStart.displayText)
-                            .font(.system(size: 28, weight: .ultraLight, design: .rounded))
-                            .monospacedDigit()
-                            .kerning(-0.8)
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                }
+                tomorrowStartBlock
             }
 
             Spacer(minLength: 8)
 
             if let footerText = overnightFooterText {
-                if style == .minimal {
-                    horizontalHairline
-                        .padding(.bottom, 6)
-                }
+                horizontalHairline
+                    .padding(.bottom, 6)
                 Text(footerText)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
@@ -384,7 +419,25 @@ struct MediumWidgetView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background { cardBackgroundContent }
+    }
+
+    private var tomorrowStartBlock: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text("FIRST TOMORROW")
+                .font(.system(size: 9, weight: .heavy))
+                .tracking(0.9)
+                .foregroundStyle(.secondary)
+            if let serviceStart = primaryTomorrowServiceStart {
+                Text(serviceStart.displayText)
+                    .font(.system(size: 28, weight: .ultraLight, design: .rounded))
+                    .monospacedDigit()
+                    .kerning(-0.8)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(minWidth: 96, alignment: .trailing)
     }
 
     private var overnightFooterText: String? {
