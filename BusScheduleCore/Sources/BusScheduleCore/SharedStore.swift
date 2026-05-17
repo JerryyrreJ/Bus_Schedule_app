@@ -406,6 +406,9 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
     private let session = WCSession.default
     private let lock = NSLock()
     private var didStart = false
+    #if os(iOS)
+    private var didLogWatchAppUnavailable = false
+    #endif
 
     private override init() {
         super.init()
@@ -457,6 +460,14 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         #else
         let pairing = "iosCounterpart=\(session.isCompanionAppInstalled)"
         #endif
+        #if os(iOS)
+        guard session.isPaired, session.isWatchAppInstalled else {
+            logWatchAppUnavailableOnce()
+            return
+        }
+        resetWatchAppUnavailableLog()
+        #endif
+
         print("[BusSchedule.WCSync] publish state=\(session.activationState.rawValue) \(pairing) route=\(SharedStore.localPrimaryRouteValue())@\(SharedStore.localPrimaryRouteUpdatedAt())#\(SharedStore.localPrimaryRouteSourceDeviceID()) override=\(SharedStore.localOverrideValue())@\(SharedStore.localOverrideUpdatedAt())#\(SharedStore.localOverrideSourceDeviceID()) exp=\(SharedStore.localOverrideExpiresAt())")
 
         do {
@@ -511,6 +522,29 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
             start()
         }
     }
+
+    #if os(iOS)
+    private func logWatchAppUnavailableOnce() {
+        #if DEBUG
+        lock.lock()
+        let shouldLog = !didLogWatchAppUnavailable
+        if shouldLog {
+            didLogWatchAppUnavailable = true
+        }
+        lock.unlock()
+
+        if shouldLog {
+            print("[BusSchedule.WCSync] skip publish: paired=\(session.isPaired) installed=\(session.isWatchAppInstalled)")
+        }
+        #endif
+    }
+
+    private func resetWatchAppUnavailableLog() {
+        lock.lock()
+        didLogWatchAppUnavailable = false
+        lock.unlock()
+    }
+    #endif
 
     private func applyReceivedContextIfPresent() {
         applyPayload(session.receivedApplicationContext)

@@ -8,6 +8,25 @@ struct ScheduleQueriesTests {
         ((hour * 60) + minute) * 60 + second
     }
 
+    private func localDate(
+        year: Int = 2026,
+        month: Int = 5,
+        day: Int,
+        hour: Int = 12,
+        minute: Int = 0,
+        second: Int = 0,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) throws -> Date {
+        try #require(Calendar.current.date(from: DateComponents(
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute,
+            second: second
+        )), sourceLocation: sourceLocation)
+    }
+
     private func expectScheduled(
         _ state: NextDepartureState,
         time: String,
@@ -274,6 +293,85 @@ struct ScheduleQueriesTests {
             dayType: .weekday,
             currentSecondsFromMidnight: seconds(23, 0)
         ) == 0)
+    }
+
+    @Test("Automatic day type follows local calendar weekday")
+    func automaticDayTypeFollowsCalendarWeekday() throws {
+        #expect(DayType.automatic(for: try localDate(day: 4)) == .weekday)
+        #expect(DayType.automatic(for: try localDate(day: 9)) == .saturday)
+        #expect(DayType.automatic(for: try localDate(day: 10)) == .sundayOrHoliday)
+    }
+
+    @Test("Override cycle skips the automatic day type")
+    func overrideCycleSkipsAutomaticDayType() {
+        #expect(DayType.nextOverrideInCycle(from: nil, currentAuto: .weekday) == .saturday)
+        #expect(DayType.nextOverrideInCycle(from: .saturday, currentAuto: .weekday) == .sundayOrHoliday)
+        #expect(DayType.nextOverrideInCycle(from: .sundayOrHoliday, currentAuto: .weekday) == nil)
+
+        #expect(DayType.nextOverrideInCycle(from: nil, currentAuto: .saturday) == .weekday)
+        #expect(DayType.nextOverrideInCycle(from: .weekday, currentAuto: .saturday) == .sundayOrHoliday)
+        #expect(DayType.nextOverrideInCycle(from: .sundayOrHoliday, currentAuto: .saturday) == nil)
+
+        #expect(DayType.nextOverrideInCycle(from: nil, currentAuto: .sundayOrHoliday) == .weekday)
+        #expect(DayType.nextOverrideInCycle(from: .weekday, currentAuto: .sundayOrHoliday) == .saturday)
+        #expect(DayType.nextOverrideInCycle(from: .saturday, currentAuto: .sundayOrHoliday) == nil)
+    }
+
+    @Test("Next service day preserves manual override and auto-detects tomorrow otherwise")
+    func nextServiceDayPreservesManualOverrideOrAutoDetectsTomorrow() throws {
+        let friday = try localDate(day: 8, hour: 23)
+
+        let manual = Schedule.nextServiceDay(
+            after: friday,
+            currentDayType: .weekday,
+            isManualOverride: true
+        )
+        #expect(manual.dayType == .weekday)
+
+        let automatic = Schedule.nextServiceDay(
+            after: friday,
+            currentDayType: .weekday,
+            isManualOverride: false
+        )
+        #expect(automatic.dayType == .saturday)
+
+        let manualComponents = Calendar.current.dateComponents([.year, .month, .day], from: manual.date)
+        let automaticComponents = Calendar.current.dateComponents([.year, .month, .day], from: automatic.date)
+        #expect(manualComponents.year == 2026)
+        #expect(manualComponents.month == 5)
+        #expect(manualComponents.day == 9)
+        #expect(automaticComponents.year == 2026)
+        #expect(automaticComponents.month == 5)
+        #expect(automaticComponents.day == 9)
+    }
+
+    @Test("Last departure returns final scheduled bus for weekday and weekend")
+    func lastDepartureReturnsFinalScheduledBus() {
+        #expect(Schedule.lastDeparture(for: .phIINewCampus, dayType: .weekday) == "22:10")
+        #expect(Schedule.lastDeparture(for: .phIParkingLot, dayType: .weekday) == "22:30")
+        #expect(Schedule.lastDeparture(for: .phIINewCampus, dayType: .saturday) == "22:40")
+        #expect(Schedule.lastDeparture(for: .phIParkingLot, dayType: .sundayOrHoliday) == "23:00")
+    }
+
+    @Test("Countdown formatter covers immediate seconds minutes and hours")
+    func countdownFormatterCoversDisplayModes() {
+        #expect(CountdownFormatter.string(forSeconds: 0) == "Now")
+        #expect(CountdownFormatter.string(forSeconds: -1) == "Now")
+        #expect(CountdownFormatter.string(forSeconds: 45) == "45s")
+        #expect(CountdownFormatter.string(forSeconds: 185) == "3m 05s")
+        #expect(CountdownFormatter.string(forSeconds: 300) == "5m 00s")
+        #expect(CountdownFormatter.string(forSeconds: 301) == "5m")
+        #expect(CountdownFormatter.string(forSeconds: 720) == "12m")
+        #expect(CountdownFormatter.string(forSeconds: 3600) == "1h")
+        #expect(CountdownFormatter.string(forSeconds: 3660) == "1h 1m")
+    }
+
+    @Test("Widget urgency changes at three and five minute boundaries")
+    func widgetUrgencyBoundaryValues() {
+        #expect(WidgetUrgency.from(secondsRemaining: seconds(0, 3)) == .critical)
+        #expect(WidgetUrgency.from(secondsRemaining: seconds(0, 3, 1)) == .warm)
+        #expect(WidgetUrgency.from(secondsRemaining: seconds(0, 5)) == .warm)
+        #expect(WidgetUrgency.from(secondsRemaining: seconds(0, 5, 1)) == .normal)
     }
 
     @Test("Sync comparison uses revision first and device ID as tie breaker")
