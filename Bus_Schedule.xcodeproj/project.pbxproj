@@ -81,7 +81,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bus_Schedule.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F735ED02CE1BE3700C1BB86 /* BNBU Bus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BNBU Bus.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Bus_ScheduleWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F8823E22FA9E3350070C89C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3F8823E42FA9E3350070C89C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -91,6 +91,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3F63E0D12FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				260518icon.icon,
+			);
+			target = 3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */;
+		};
+		3F63E0D22FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				260518icon.icon,
+			);
+			target = 3F8824182FA9F6A40070C89C /* Bus_ScheduleWatch Watch App */;
+		};
+		3F63E0D32FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				260518icon.icon,
+			);
+			target = 3F8824302FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension */;
+		};
 		3F8823F32FA9E3370070C89C /* Exceptions for "Bus_ScheduleWidget" folder in "Bus_ScheduleWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -110,6 +131,11 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F735ED22CE1BE3700C1BB86 /* Bus_Schedule */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F63E0D12FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWidgetExtension" target */,
+				3F63E0D22FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWatch Watch App" target */,
+				3F63E0D32FBB4A0100BC8DA8 /* Exceptions for "Bus_Schedule" folder in "Bus_ScheduleWatchWidgetExtension" target */,
+			);
 			path = Bus_Schedule;
 			sourceTree = "<group>";
 		};
@@ -192,7 +218,7 @@
 		3F735ED12CE1BE3700C1BB86 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */,
+				3F735ED02CE1BE3700C1BB86 /* BNBU Bus.app */,
 				3F8823E02FA9E3350070C89C /* Bus_ScheduleWidgetExtension.appex */,
 				3F8824192FA9F6A40070C89C /* Bus_ScheduleWatch Watch App.app */,
 				3F8824312FA9F74A0070C89C /* Bus_ScheduleWatchWidgetExtension.appex */,
@@ -236,7 +262,7 @@
 				3F8824112FA9F5B20070C89C /* BusScheduleCore */,
 			);
 			productName = Bus_Schedule;
-			productReference = 3F735ED02CE1BE3700C1BB86 /* Bus_Schedule.app */;
+			productReference = 3F735ED02CE1BE3700C1BB86 /* BNBU Bus.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3F8823DF2FA9E3350070C89C /* Bus_ScheduleWidgetExtension */ = {
@@ -563,8 +589,9 @@
 		3F735EE02CE1BE3800C1BB86 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = 260518icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Bus_Schedule/Bus_Schedule.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -589,7 +616,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "BNBU Bus";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -603,8 +630,9 @@
 		3F735EE12CE1BE3800C1BB86 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = 260518icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Bus_Schedule/Bus_Schedule.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -629,7 +657,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Jerry-Lu.Bus-Schedule";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "BNBU Bus";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -708,14 +736,15 @@
 		3F8824252FA9F6A50070C89C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = 260518icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Bus_ScheduleWatch Watch App/Bus_ScheduleWatch.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "Jerry-Lu.Bus-Schedule";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -741,14 +770,15 @@
 		3F8824262FA9F6A50070C89C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = 260518icon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Bus_ScheduleWatch Watch App/Bus_ScheduleWatch.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatch;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "Jerry-Lu.Bus-Schedule";
 				LD_RUNPATH_SEARCH_PATHS = (

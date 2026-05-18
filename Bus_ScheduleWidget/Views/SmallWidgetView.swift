@@ -90,7 +90,7 @@ struct SmallWidgetView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Spacer(minLength: 4)
-                Text(CountdownFormatter.string(forSeconds: remaining))
+                Text(compactCountdownString(forSeconds: remaining))
                     .font(.system(
                         size: isCritical ? 19 : 17,
                         weight: isCritical ? .heavy : .bold,
@@ -98,6 +98,8 @@ struct SmallWidgetView: View {
                     ))
                     .monospacedDigit()
                     .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: entry.primaryRoute))
+                    .lineLimit(1)
+                    .layoutPriority(1)
             }
         }
     }
@@ -202,5 +204,14 @@ struct SmallWidgetView: View {
                 }
             }
         }
+    }
+
+    private func compactCountdownString(forSeconds seconds: Int) -> String {
+        guard seconds >= 3600 else {
+            return CountdownFormatter.string(forSeconds: seconds)
+        }
+
+        let hours = seconds / 3600
+        return seconds % 3600 == 0 ? "\(hours)H" : "\(hours)H+"
     }
 }
