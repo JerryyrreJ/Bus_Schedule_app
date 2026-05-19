@@ -221,7 +221,7 @@ struct MediumWidgetView: View {
             Spacer(minLength: 0)
 
             if layoutState == .lastDeparture {
-                statusBadge("LAST TODAY")
+                statusBadge("LAST")
             }
         }
     }
@@ -727,6 +727,9 @@ struct MediumWidgetView: View {
             .font(.system(size: 8, weight: .heavy))
             .tracking(0.7)
             .foregroundStyle(Color.orange)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .layoutPriority(2)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(

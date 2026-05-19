@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3F735ECF2CE1BE3700C1BB86"
-               BuildableName = "Bus_Schedule.app"
+               BuildableName = "BNBU Bus.app"
                BlueprintName = "Bus_Schedule"
                ReferencedContainer = "container:Bus_Schedule.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F735ECF2CE1BE3700C1BB86"
-            BuildableName = "Bus_Schedule.app"
+            BuildableName = "BNBU Bus.app"
             BlueprintName = "Bus_Schedule"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F735ECF2CE1BE3700C1BB86"
-            BuildableName = "Bus_Schedule.app"
+            BuildableName = "BNBU Bus.app"
             BlueprintName = "Bus_Schedule"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
