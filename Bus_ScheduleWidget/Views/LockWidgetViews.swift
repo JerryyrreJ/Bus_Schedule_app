@@ -49,7 +49,7 @@ struct LockRectangularView: View {
                         .monospacedDigit()
 
                     HStack(spacing: 4) {
-                        Text("in")
+                        Text(BusScheduleStrings.inPrefix)
                             .foregroundStyle(.secondary)
                         Text(CountdownFormatter.string(forSeconds: remaining))
                             .fontWeight(.bold)
@@ -60,7 +60,7 @@ struct LockRectangularView: View {
                             currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
                             limit: 1
                         ).first {
-                            Text("· then \(then)")
+                            Text("· \(BusScheduleStrings.thenLower) \(then)")
                                 .foregroundStyle(.secondary)
                                 .monospacedDigit()
                         }
@@ -68,7 +68,7 @@ struct LockRectangularView: View {
                     .font(.system(size: 12, weight: .medium))
 
                 case .returnImmediately:
-                    Text("Return Immediately")
+                    Text(BusScheduleStrings.returnImmediately)
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -76,14 +76,14 @@ struct LockRectangularView: View {
                         dayType: entry.dayType,
                         currentSecondsFromMidnight: entry.currentSecondsFromMidnight
                     ) {
-                        Text("Loop active until \(deadline)")
+                        Text(BusScheduleStrings.loopActiveUntil(deadline))
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
 
                 case .noMoreBuses:
-                    Text("Service ended")
+                    Text(BusScheduleStrings.serviceEnded)
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                     if let serviceStart = Schedule.firstServiceStart(
                         for: entry.primaryRoute,
@@ -93,7 +93,7 @@ struct LockRectangularView: View {
                             isManualOverride: entry.isManualOverride
                         ).dayType
                     ) {
-                        Text("First tomorrow \(serviceStart.displayText)")
+                        Text(BusScheduleStrings.firstTomorrow(serviceStart.displayText))
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
@@ -137,7 +137,7 @@ struct LockCircularView: View {
             case .returnImmediately:
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 14, weight: .semibold))
-                Text("Loop")
+                Text(BusScheduleStrings.loop)
                     .font(.system(size: 11, weight: .semibold))
 
             case .noMoreBuses:
@@ -185,9 +185,9 @@ struct LockInlineView: View {
                 systemImage: WidgetTheme.busSymbol
             )
         case .returnImmediately:
-            Label("\(route) · Loop active", systemImage: "arrow.triangle.2.circlepath")
+            Label("\(route) · \(BusScheduleStrings.loopActive)", systemImage: "arrow.triangle.2.circlepath")
         case .noMoreBuses:
-            Label("\(route) · Service ended", systemImage: "moon.fill")
+            Label("\(route) · \(BusScheduleStrings.serviceEnded)", systemImage: "moon.fill")
         }
     }
 }

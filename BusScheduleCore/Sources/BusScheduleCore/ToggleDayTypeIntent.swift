@@ -13,9 +13,7 @@ import WidgetKit
 public struct ToggleDayTypeIntent: AppIntent {
     public static var title: LocalizedStringResource { "Cycle Schedule Override" }
     public static var description: IntentDescription? {
-        IntentDescription(
         "Cycles the schedule override between Auto, Weekday, Saturday, and Holiday."
-        )
     }
 
     public static var isDiscoverable: Bool { false }

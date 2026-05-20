@@ -13,18 +13,18 @@ public enum WidgetTheme {
     public static let busSymbol = "bus.fill"
 
     public static func routeLabel(for location: Location) -> String {
-        location == .phIINewCampus ? "Phase II → Phase I" : "Phase I → Phase II"
+        location == .phIINewCampus ? BusScheduleStrings.phaseIIToPhaseI : BusScheduleStrings.phaseIToPhaseII
     }
 
     /// Compressed label for accessoryInline / corner / circular complications.
     public static func compactRouteLabel(for location: Location) -> String {
-        location == .phIINewCampus ? "Ph II→I" : "Ph I→II"
+        location == .phIINewCampus ? BusScheduleStrings.compactPhaseIIToPhaseI : BusScheduleStrings.compactPhaseIToPhaseII
     }
 
     /// Numeric-only label for the rectangular complication header where the
     /// surrounding context already implies a campus shuttle.
     public static func minimalRouteLabel(for location: Location) -> String {
-        location == .phIINewCampus ? "2 → 1" : "1 → 2"
+        location == .phIINewCampus ? BusScheduleStrings.minimalPhaseIIToPhaseI : BusScheduleStrings.minimalPhaseIToPhaseII
     }
 
     /// Direction-coded accent. Matches NextBusView.accentColor.

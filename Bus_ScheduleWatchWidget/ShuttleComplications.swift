@@ -18,8 +18,8 @@ struct ShuttleWatchCircular: Widget {
             WatchCircularView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName("Shuttle · Circular")
-        .description("Bus icon and next departure.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleCircular))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchCircularDescription))
         .supportedFamilies([.accessoryCircular])
     }
 }
@@ -32,8 +32,8 @@ struct ShuttleWatchRectangular: Widget {
             WatchRectangularView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName("Shuttle · Rectangular")
-        .description("Route, time, and countdown.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleRectangular))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchRectangularDescription))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -46,8 +46,8 @@ struct ShuttleWatchInline: Widget {
             WatchInlineView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName("Shuttle · Inline")
-        .description("Single-line summary alongside the time.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleInline))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchInlineDescription))
         .supportedFamilies([.accessoryInline])
     }
 }
@@ -60,8 +60,8 @@ struct ShuttleWatchCorner: Widget {
             WatchCornerView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName("Shuttle · Corner")
-        .description("Corner of the Infograph face.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleCorner))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchCornerDescription))
         .supportedFamilies([.accessoryCorner])
     }
 }

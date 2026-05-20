@@ -25,8 +25,8 @@ struct ShuttleHomeWidget: Widget {
                     Color(uiColor: .systemBackground)
                 }
         }
-        .configurationDisplayName("Campus Shuttle")
-        .description("Next departure, countdown, and upcoming times.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.campusShuttle))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.homeWidgetDescription))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

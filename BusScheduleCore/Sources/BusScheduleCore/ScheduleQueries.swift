@@ -52,7 +52,7 @@ public enum ServiceStart: Sendable, Equatable {
         case let .scheduled(time):
             return time
         case let .returnImmediately(startTime):
-            return "\(startTime) Loop"
+            return BusScheduleStrings.serviceStartLoop(startTime)
         }
     }
 
@@ -71,7 +71,7 @@ public extension Schedule {
     static func firstDeparture(for location: Location, dayType: DayType) -> String? {
         for busTime in getCurrentSchedule(dayType) {
             let t = location == .phIINewCampus ? busTime.phII : busTime.phI
-            if !t.isEmpty && t != "Return Immediately" { return t }
+            if !t.isEmpty && t != BusScheduleStrings.returnImmediately { return t }
         }
         return nil
     }
@@ -81,13 +81,13 @@ public extension Schedule {
             let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
 
             if location == .phIParkingLot,
-               timeString == "Return Immediately",
+               timeString == BusScheduleStrings.returnImmediately,
                secondsFromTimeString(busTime.phII) != nil {
                 return .returnImmediately(startTime: busTime.phII)
             }
 
             if !timeString.isEmpty,
-               timeString != "Return Immediately",
+               timeString != BusScheduleStrings.returnImmediately,
                secondsFromTimeString(timeString) != nil {
                 return .scheduled(time: timeString)
             }
@@ -99,7 +99,7 @@ public extension Schedule {
     static func lastDeparture(for location: Location, dayType: DayType) -> String? {
         for busTime in getCurrentSchedule(dayType).reversed() {
             let t = location == .phIINewCampus ? busTime.phII : busTime.phI
-            if !t.isEmpty && t != "Return Immediately" { return t }
+            if !t.isEmpty && t != BusScheduleStrings.returnImmediately { return t }
         }
         return nil
     }
@@ -111,7 +111,7 @@ public extension Schedule {
         let schedule = getCurrentSchedule(dayType)
         for index in schedule.indices {
             let busTime = schedule[index]
-            guard busTime.phI == "Return Immediately",
+            guard busTime.phI == BusScheduleStrings.returnImmediately,
                   let startSeconds = secondsFromTimeString(busTime.phII),
                   index + 1 < schedule.count,
                   let endSeconds = secondsFromTimeString(schedule[index + 1].phII) else {
@@ -344,7 +344,7 @@ public extension Schedule {
         var lastSeen: Int? = nil
         for busTime in getCurrentSchedule(dayType) {
             let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
-            guard timeString != "Return Immediately",
+            guard timeString != BusScheduleStrings.returnImmediately,
                   let s = secondsFromTimeString(timeString),
                   s <= currentSecondsFromMidnight else {
                 continue
@@ -357,7 +357,7 @@ public extension Schedule {
 
 public enum CountdownFormatter {
     public static func string(forSeconds seconds: Int) -> String {
-        if seconds <= 0 { return "Now" }
+        if seconds <= 0 { return BusScheduleStrings.now }
         if seconds < 60 { return "\(seconds)s" }
         let minutes = seconds / 60
         if minutes < 60 {

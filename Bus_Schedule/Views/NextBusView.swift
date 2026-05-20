@@ -30,7 +30,7 @@ struct NextBusView: View {
 
     private func heroBlock(state: DisplayState) -> some View {
         VStack(spacing: 6) {
-            Text("Next Departure")
+            Text(BusScheduleStrings.nextDeparture)
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(2.4)
                 .foregroundColor(.secondary)
@@ -39,7 +39,7 @@ struct NextBusView: View {
             if state.isReturnImmediately {
                 returnImmediatelyHero
             } else if state.isNoMoreBuses {
-                Text("No more buses today")
+                Text(BusScheduleStrings.noMoreBusesToday)
                     .font(.system(size: 28, weight: .semibold, design: .rounded))
                     .foregroundColor(.secondary)
                     .padding(.top, 12)
@@ -56,7 +56,7 @@ struct NextBusView: View {
     private var returnImmediatelyHero: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                Text("Return Immediately")
+                Text(BusScheduleStrings.returnImmediately)
                     .font(.system(size: 32, weight: .semibold, design: .rounded))
                     .foregroundColor(.green)
 
@@ -67,7 +67,7 @@ struct NextBusView: View {
                         .foregroundColor(.secondary)
                 }
                 .popover(isPresented: $showTooltip) {
-                    Text("A bus is continuously available. After dropping off passengers at Phase 1, it returns directly to Phase 2 campus for pickup.")
+                    Text(BusScheduleStrings.returnImmediatelyHelp)
                         .padding()
                         .frame(maxWidth: 280)
                 }
@@ -81,7 +81,7 @@ struct NextBusView: View {
     private func countdownBlock(state: DisplayState) -> some View {
         VStack(spacing: 10) {
             HStack {
-                Text("Time Left")
+                Text(BusScheduleStrings.timeLeft)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.secondary)
                 Spacer()
@@ -116,7 +116,7 @@ struct NextBusView: View {
 
     private func upcomingBlock(state: DisplayState) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Upcoming")
+            Text(BusScheduleStrings.upcoming)
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(2.4)
                 .foregroundColor(.secondary)

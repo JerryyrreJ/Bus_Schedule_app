@@ -23,8 +23,8 @@ struct LocationToggleView: View {
             }
 
             HStack(spacing: 0) {
-                segmentButton(title: "Phase II", target: .phIINewCampus)
-                segmentButton(title: "Phase I", target: .phIParkingLot)
+                segmentButton(title: BusScheduleStrings.phaseII, target: .phIINewCampus)
+                segmentButton(title: BusScheduleStrings.phaseI, target: .phIParkingLot)
             }
         }
         .frame(height: 52)

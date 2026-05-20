@@ -213,7 +213,7 @@ public enum Schedule {
         for index in schedule.indices {
             let busTime = schedule[index]
 
-            guard busTime.phI == "Return Immediately",
+            guard busTime.phI == BusScheduleStrings.returnImmediately,
                   let startSeconds = secondsFromTimeString(busTime.phII),
                   index + 1 < schedule.count,
                   let endSeconds = secondsFromTimeString(schedule[index + 1].phII) else {

@@ -129,7 +129,7 @@ struct MediumWidgetView: View {
             Image(systemName: WidgetTheme.busSymbol)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
-            Text("Campus Shuttle")
+            Text(BusScheduleStrings.campusShuttle)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
             Spacer(minLength: 8)
@@ -221,7 +221,7 @@ struct MediumWidgetView: View {
             Spacer(minLength: 0)
 
             if layoutState == .lastDeparture {
-                statusBadge("LAST")
+                statusBadge(BusScheduleStrings.lastUpper)
             }
         }
     }
@@ -246,7 +246,7 @@ struct MediumWidgetView: View {
                     .minimumScaleFactor(0.6)
 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(urgency == .critical ? "Departing in" : "Leaves in")
+                    Text(urgency == .critical ? BusScheduleStrings.departingIn : BusScheduleStrings.leavesIn)
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                     Text(CountdownFormatter.string(forSeconds: remaining))
@@ -258,7 +258,7 @@ struct MediumWidgetView: View {
 
         case .returnImmediately:
             VStack(alignment: .leading, spacing: 2) {
-                Text("Return Immediately")
+                Text(BusScheduleStrings.returnImmediately)
                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .foregroundStyle(.green)
                     .lineLimit(1)
@@ -267,7 +267,7 @@ struct MediumWidgetView: View {
                     dayType: entry.dayType,
                     currentSecondsFromMidnight: entry.currentSecondsFromMidnight
                 ) {
-                    Text("Until \(deadline)")
+                    Text(BusScheduleStrings.until(deadline))
                         .font(.system(size: 11, weight: .heavy, design: .rounded))
                         .foregroundStyle(.green)
                         .monospacedDigit()
@@ -276,12 +276,12 @@ struct MediumWidgetView: View {
 
         case .noMoreBuses:
             VStack(alignment: .leading, spacing: 2) {
-                Text("Service ended")
+                Text(BusScheduleStrings.serviceEnded)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
                 if let serviceStart = primaryTomorrowServiceStart {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("FIRST TOMORROW")
+                        Text(BusScheduleStrings.firstTomorrow)
                             .font(.system(size: 8, weight: .heavy))
                             .tracking(0.8)
                             .foregroundStyle(.secondary)
@@ -299,7 +299,7 @@ struct MediumWidgetView: View {
     private var primaryFooter: some View {
         switch layoutState {
         case .lastDeparture:
-            Text("No more departures after this")
+            Text(BusScheduleStrings.noMoreDeparturesAfterThis)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
@@ -315,7 +315,7 @@ struct MediumWidgetView: View {
                 )
                 if !upcoming.isEmpty {
                     HStack(spacing: 4) {
-                        Text("Then")
+                        Text(BusScheduleStrings.thenLower)
                             .font(.system(size: 10))
                             .foregroundStyle(.secondary)
                         Text(upcoming.joined(separator: " · "))
@@ -327,13 +327,13 @@ struct MediumWidgetView: View {
                     }
                 }
             case .returnImmediately:
-                Text("Continuous pickup loop is active.")
+                Text(BusScheduleStrings.continuousPickupLoopActive)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             case .noMoreBuses:
                 if let last = primaryLastToday {
-                    Text("Last today was \(last)")
+                    Text(BusScheduleStrings.lastTodayWas(last))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
@@ -353,18 +353,18 @@ struct MediumWidgetView: View {
     private var cardOvernightCard: some View {
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Service ended today")
+                Text(BusScheduleStrings.serviceEndedToday)
                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
 
                 if let last = primaryLastToday {
-                    overnightDetailLine(label: "Last", value: last)
+                    overnightDetailLine(label: BusScheduleStrings.last, value: last)
                 }
 
                 if let oppositeServiceStart = oppositeTomorrowServiceStart {
-                    overnightDetailLine(label: "Other", value: oppositeServiceStart.displayText)
+                    overnightDetailLine(label: BusScheduleStrings.other, value: oppositeServiceStart.displayText)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -394,7 +394,7 @@ struct MediumWidgetView: View {
     private var minimalOvernightCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 12) {
-                Text("Service ended today")
+                Text(BusScheduleStrings.serviceEndedToday)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
@@ -423,7 +423,7 @@ struct MediumWidgetView: View {
 
     private var tomorrowStartBlock: some View {
         VStack(alignment: .trailing, spacing: 2) {
-            Text("FIRST TOMORROW")
+            Text(BusScheduleStrings.firstTomorrow)
                 .font(.system(size: 9, weight: .heavy))
                 .tracking(0.9)
                 .foregroundStyle(.secondary)
@@ -462,13 +462,13 @@ struct MediumWidgetView: View {
             switch layoutState {
             case .lastDeparture:
                 infoSecondaryCard(
-                    title: "Tomorrow first",
+                    title: BusScheduleStrings.firstTomorrowLower,
                     serviceStart: primaryTomorrowServiceStart
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             case .default:
                 genericSecondaryCard(
-                    title: "Then",
+                    title: BusScheduleStrings.thenLower,
                     state: secondThenState()
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -492,12 +492,12 @@ struct MediumWidgetView: View {
             switch layoutState {
             case .lastDeparture:
                 minimalInfoSection(
-                    title: "Tomorrow first",
+                    title: BusScheduleStrings.firstTomorrowLower,
                     serviceStart: primaryTomorrowServiceStart
                 )
             case .default:
                 minimalSecondarySection(
-                    title: "Then",
+                    title: BusScheduleStrings.thenLower,
                     state: secondThenState(),
                     noMoreStyle: .dash
                 )
@@ -521,7 +521,7 @@ struct MediumWidgetView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             } else {
-                Text("Unavailable")
+                Text(BusScheduleStrings.unavailable)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -578,7 +578,7 @@ struct MediumWidgetView: View {
             }
 
         case .returnImmediately:
-            Text("Loop active")
+            Text(BusScheduleStrings.loopActive)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(.green)
                 .lineLimit(1)
@@ -590,7 +590,7 @@ struct MediumWidgetView: View {
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .foregroundStyle(.tertiary)
             case .serviceEnded:
-                Text("Service ended")
+                Text(BusScheduleStrings.serviceEnded)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -647,7 +647,7 @@ struct MediumWidgetView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             } else {
-                Text("Unavailable")
+                Text(BusScheduleStrings.unavailable)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -702,7 +702,7 @@ struct MediumWidgetView: View {
             }
 
         case .returnImmediately:
-            Text("Loop active")
+            Text(BusScheduleStrings.loopActive)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.green)
 
@@ -713,7 +713,7 @@ struct MediumWidgetView: View {
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(.tertiary)
             case .serviceEnded:
-                Text("Service ended")
+                Text(BusScheduleStrings.serviceEnded)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

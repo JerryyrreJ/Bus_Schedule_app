@@ -84,7 +84,7 @@ struct SmallWidgetView: View {
                 .lineLimit(1)
 
             HStack {
-                Text(isCritical ? "Departing in" : "Next departure")
+                Text(isCritical ? BusScheduleStrings.departingIn : BusScheduleStrings.nextDepartureLower)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -110,17 +110,17 @@ struct SmallWidgetView: View {
             currentSecondsFromMidnight: entry.currentSecondsFromMidnight
         )
         return VStack(alignment: .leading, spacing: 4) {
-            Text("Return Immediately")
+            Text(BusScheduleStrings.returnImmediately)
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(Color.green)
                 .minimumScaleFactor(0.7)
                 .lineLimit(2)
-            Text("Continuous pickup loop is active.")
+            Text(BusScheduleStrings.continuousPickupLoopActive)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
             if let deadline {
-                Text("Until \(deadline)")
+                Text(BusScheduleStrings.until(deadline))
                     .font(.system(size: 11, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color.green)
                     .monospacedDigit()
@@ -143,11 +143,11 @@ struct SmallWidgetView: View {
         let serviceStart = Schedule.firstServiceStart(for: entry.primaryRoute, dayType: nextDay.dayType)
 
         return VStack(alignment: .leading, spacing: 4) {
-            Text("Service ended")
+            Text(BusScheduleStrings.serviceEnded)
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
             if let serviceStart {
-                Text("FIRST TOMORROW")
+                Text(BusScheduleStrings.firstTomorrow)
                     .font(.system(size: 9, weight: .heavy))
                     .tracking(1.2)
                     .foregroundStyle(.secondary)
@@ -159,7 +159,7 @@ struct SmallWidgetView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             } else {
-                Text("Service resumes tomorrow.")
+                Text(BusScheduleStrings.serviceResumesTomorrow)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -184,7 +184,7 @@ struct SmallWidgetView: View {
             )
             if !upcoming.isEmpty {
                 HStack {
-                    Text("THEN")
+                    Text(BusScheduleStrings.then)
                         .font(.system(size: 9, weight: .heavy))
                         .tracking(1.2)
                         .foregroundStyle(.secondary)

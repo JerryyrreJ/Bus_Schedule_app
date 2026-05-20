@@ -71,9 +71,9 @@ struct DayTypeToggleView: View {
             }
 
             HStack(spacing: 0) {
-                segmentButton(title: "Weekday", target: .weekday)
-                segmentButton(title: "Saturday", target: .saturday)
-                segmentButton(title: "Sun/Holiday", target: .sundayOrHoliday)
+                segmentButton(title: BusScheduleStrings.weekday, target: .weekday)
+                segmentButton(title: BusScheduleStrings.saturday, target: .saturday)
+                segmentButton(title: BusScheduleStrings.sunHoliday, target: .sundayOrHoliday)
             }
         }
         .frame(height: 44)
@@ -123,9 +123,9 @@ struct DayTypeToggleView: View {
 
     private func label(for type: DayType) -> String {
         switch type {
-        case .weekday: return "Weekday"
-        case .saturday: return "Saturday"
-        case .sundayOrHoliday: return "Sun/Holiday"
+        case .weekday: return BusScheduleStrings.weekday
+        case .saturday: return BusScheduleStrings.saturday
+        case .sundayOrHoliday: return BusScheduleStrings.sunHoliday
         }
     }
 

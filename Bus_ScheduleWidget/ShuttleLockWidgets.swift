@@ -22,8 +22,8 @@ struct ShuttleLockRectangularWidget: Widget {
             LockRectangularView(entry: entry)
                 .containerBackground(for: .widget) { Color.clear }
         }
-        .configurationDisplayName("Shuttle · Rectangular")
-        .description("Lock-screen widget with route, departure time, and countdown.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleRectangular))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.lockRectangularDescription))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -38,8 +38,8 @@ struct ShuttleLockCircularWidget: Widget {
             LockCircularView(entry: entry)
                 .containerBackground(for: .widget) { Color.clear }
         }
-        .configurationDisplayName("Shuttle · Circular")
-        .description("Compact bus icon and departure time.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleCircular))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.lockCircularDescription))
         .supportedFamilies([.accessoryCircular])
     }
 }
@@ -54,8 +54,8 @@ struct ShuttleLockInlineWidget: Widget {
             LockInlineView(entry: entry)
                 .containerBackground(for: .widget) { Color.clear }
         }
-        .configurationDisplayName("Shuttle · Inline")
-        .description("Single-line departure summary next to the time.")
+        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleInline))
+        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.lockInlineDescription))
         .supportedFamilies([.accessoryInline])
     }
 }

@@ -150,7 +150,7 @@ struct WatchContentView: View {
         // Countdown — second focal point, baseline-aligned for tight visual.
         // Semantic fonts so it scales with watch size + Dynamic Type.
         HStack(alignment: .firstTextBaseline, spacing: 5) {
-            Text(urgency == .critical ? "Departing in" : "Leaves in")
+            Text(urgency == .critical ? BusScheduleStrings.departingIn : BusScheduleStrings.leavesIn)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             Text(CountdownFormatter.string(forSeconds: remaining))
@@ -204,7 +204,7 @@ struct WatchContentView: View {
     @ViewBuilder
     private func upcomingChips(times: [String]) -> some View {
         HStack(spacing: 5) {
-            Text("THEN")
+            Text(BusScheduleStrings.then)
                 .font(.caption2.weight(.heavy))
                 .tracking(1.2)
                 .foregroundStyle(.tertiary)
@@ -226,7 +226,7 @@ struct WatchContentView: View {
 
     @ViewBuilder
     private func returnImmediatelyBlock(currentSeconds: Int, dayType: DayType) -> some View {
-        Text("Return\nImmediately")
+        Text(BusScheduleStrings.returnImmediatelyMultiline())
             .font(.system(size: 26, weight: .semibold, design: .rounded))
             .foregroundStyle(.green)
             .lineLimit(2)
@@ -234,7 +234,7 @@ struct WatchContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
 
-        Text("Continuous pickup loop is active.")
+        Text(BusScheduleStrings.continuousPickupLoopActive)
             .font(.system(size: 12))
             .foregroundStyle(.secondary)
             .lineLimit(2)
@@ -251,7 +251,7 @@ struct WatchContentView: View {
                 .padding(.bottom, 5)
 
             HStack(spacing: 6) {
-                Text("UNTIL")
+                Text(BusScheduleStrings.untilUpper)
                     .font(.system(size: 10, weight: .heavy))
                     .tracking(1.2)
                     .foregroundStyle(.tertiary)
@@ -272,9 +272,9 @@ struct WatchContentView: View {
             currentDayType: resolved.dayType,
             isManualOverride: resolved.isManualOverride
         )
-        let firstTime = Schedule.firstDeparture(for: primaryRoute, dayType: nextDay.dayType)
+        let serviceStart = Schedule.firstServiceStart(for: primaryRoute, dayType: nextDay.dayType)
 
-        Text("Service ended")
+        Text(BusScheduleStrings.serviceEnded)
             .font(.system(size: 18, weight: .semibold, design: .rounded))
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -282,16 +282,16 @@ struct WatchContentView: View {
 
         Spacer(minLength: 6)
 
-        if let firstTime {
+        if let serviceStart {
             Divider()
                 .opacity(0.25)
                 .padding(.bottom, 5)
 
-            Text("FIRST TOMORROW")
+            Text(BusScheduleStrings.firstTomorrow)
                 .font(.system(size: 10, weight: .heavy))
                 .tracking(1.2)
                 .foregroundStyle(.tertiary)
-            Text(firstTime)
+            Text(serviceStart.compactDisplayText)
                 .font(.system(size: 40, weight: .ultraLight, design: .rounded))
                 .monospacedDigit()
                 .kerning(-1.5)

@@ -41,13 +41,13 @@ struct OverrideChip: View {
         .buttonStyle(.plain)
     }
 
-    private var prefix: String { isManualOverride ? "Manual" : "Auto" }
+    private var prefix: String { isManualOverride ? BusScheduleStrings.manual : BusScheduleStrings.auto }
 
     private var label: String {
         switch dayType {
-        case .weekday:         return "Weekday"
-        case .saturday:        return "Saturday"
-        case .sundayOrHoliday: return "Holiday"
+        case .weekday:         return BusScheduleStrings.weekday
+        case .saturday:        return BusScheduleStrings.saturday
+        case .sundayOrHoliday: return BusScheduleStrings.holiday
         }
     }
 }

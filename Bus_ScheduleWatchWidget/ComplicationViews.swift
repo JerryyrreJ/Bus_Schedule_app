@@ -41,7 +41,7 @@ struct WatchCircularView: View {
             Gauge(value: 1) {
                 EmptyView()
             } currentValueLabel: {
-                circularStatusLabel(primary: "Loop")
+                circularStatusLabel(primary: BusScheduleStrings.loop)
             }
             .gaugeStyle(.accessoryCircular)
             .tint(.primary)
@@ -62,7 +62,7 @@ struct WatchCircularView: View {
                 dayType: nextDay.dayType
             )
             staticRing {
-                circularStatusLabel(primary: serviceStart?.compactDisplayText ?? "Done")
+                circularStatusLabel(primary: serviceStart?.compactDisplayText ?? BusScheduleStrings.done)
             }
         }
     }
@@ -86,7 +86,7 @@ struct WatchCircularView: View {
 
     private func circularPrimaryText(for departureDate: Date, remaining: Int) -> Text {
         if remaining <= 0 {
-            return Text("Now")
+            return Text(BusScheduleStrings.now)
         }
 
         if remaining < 3600 {
@@ -94,7 +94,7 @@ struct WatchCircularView: View {
             return Text("\(minutes)m")
         }
 
-        return Text("1H+")
+        return Text(BusScheduleStrings.compactHourPlus)
     }
 
     private func circularPrimaryFontSize(for remaining: Int) -> CGFloat {
@@ -159,13 +159,13 @@ struct WatchRectangularView: View {
                 .minimumScaleFactor(0.6)
 
         case .returnImmediately:
-            Text("Loop active")
+            Text(BusScheduleStrings.loopActive)
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
 
         case .noMoreBuses:
-            Text("Service ended")
+            Text(BusScheduleStrings.serviceEnded)
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.55)
@@ -207,7 +207,7 @@ struct WatchRectangularView: View {
                 dayType: entry.dayType,
                 currentSecondsFromMidnight: entry.currentSecondsFromMidnight
             ) {
-                (Text("until ")
+                (Text(BusScheduleStrings.untilLowerPrefix + " ")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 + Text(deadline)
@@ -227,7 +227,7 @@ struct WatchRectangularView: View {
                 for: entry.primaryRoute,
                 dayType: nextDay.dayType
             ) {
-                (Text("tmrw ")
+                (Text(BusScheduleStrings.tmrwPrefix + " ")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                 + Text(serviceStart.displayText)
@@ -264,9 +264,9 @@ struct WatchInlineView: View {
                 systemImage: WidgetTheme.busSymbol
             )
         case .returnImmediately:
-            Label("\(route) · Loop active", systemImage: "arrow.triangle.2.circlepath")
+            Label("\(route) · \(BusScheduleStrings.loopActive)", systemImage: "arrow.triangle.2.circlepath")
         case .noMoreBuses:
-            Label("\(route) · Service ended", systemImage: "moon.fill")
+            Label("\(route) · \(BusScheduleStrings.serviceEnded)", systemImage: "moon.fill")
         }
     }
 }
@@ -302,14 +302,14 @@ struct WatchCornerView: View {
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(.system(size: 14, weight: .semibold))
                 .widgetLabel {
-                    Text("Loop active")
+                    Text(BusScheduleStrings.loopActive)
                 }
 
         case .noMoreBuses:
             Image(systemName: "moon.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .widgetLabel {
-                    Text("Service ended")
+                    Text(BusScheduleStrings.serviceEnded)
                 }
         }
     }

@@ -38,7 +38,7 @@ struct ContentView: View {
     }
 
     private var routeLabel: String {
-        location == .phIINewCampus ? "Phase II → Phase I" : "Phase I → Phase II"
+        WidgetTheme.routeLabel(for: location)
     }
 
     var body: some View {
@@ -87,7 +87,7 @@ struct ContentView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("Campus Shuttle")
+            Text(BusScheduleStrings.campusShuttle)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.secondary)
 
