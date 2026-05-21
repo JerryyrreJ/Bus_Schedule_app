@@ -18,8 +18,8 @@ struct ShuttleWatchCircular: Widget {
             WatchCircularView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleCircular))
-        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchCircularDescription))
+        .configurationDisplayName(BusScheduleStrings.resource("Shuttle · Circular"))
+        .description(BusScheduleStrings.resource("Watch circular complication with bus icon and next departure."))
         .supportedFamilies([.accessoryCircular])
     }
 }
@@ -32,8 +32,8 @@ struct ShuttleWatchRectangular: Widget {
             WatchRectangularView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleRectangular))
-        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchRectangularDescription))
+        .configurationDisplayName(BusScheduleStrings.resource("Shuttle · Rectangular"))
+        .description(BusScheduleStrings.resource("Watch rectangular complication with route, time, and countdown."))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -46,12 +46,13 @@ struct ShuttleWatchInline: Widget {
             WatchInlineView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleInline))
-        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchInlineDescription))
+        .configurationDisplayName(BusScheduleStrings.resource("Shuttle · Inline"))
+        .description(BusScheduleStrings.resource("Watch inline complication with single-line departure summary."))
         .supportedFamilies([.accessoryInline])
     }
 }
 
+#if os(watchOS)
 struct ShuttleWatchCorner: Widget {
     let kind = "ShuttleWatchCorner"
 
@@ -60,8 +61,9 @@ struct ShuttleWatchCorner: Widget {
             WatchCornerView(entry: entry)
                 .containerBackground(.clear, for: .widget)
         }
-        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.shuttleCorner))
-        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.watchCornerDescription))
+        .configurationDisplayName(BusScheduleStrings.resource("Shuttle · Corner"))
+        .description(BusScheduleStrings.resource("Watch corner complication for the Infograph face."))
         .supportedFamilies([.accessoryCorner])
     }
 }
+#endif

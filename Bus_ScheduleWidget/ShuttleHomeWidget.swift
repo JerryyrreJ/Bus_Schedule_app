@@ -11,6 +11,7 @@ import WidgetKit
 import SwiftUI
 import BusScheduleCore
 
+#if os(iOS)
 struct ShuttleHomeWidget: Widget {
     let kind: String = "ShuttleHomeWidget"
 
@@ -25,8 +26,8 @@ struct ShuttleHomeWidget: Widget {
                     Color(uiColor: .systemBackground)
                 }
         }
-        .configurationDisplayName(LocalizedStringResource(stringLiteral: BusScheduleStrings.campusShuttle))
-        .description(LocalizedStringResource(stringLiteral: BusScheduleStrings.homeWidgetDescription))
+        .configurationDisplayName(BusScheduleStrings.resource("Campus Shuttle"))
+        .description(BusScheduleStrings.resource("Next departure, countdown, and upcoming times."))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -83,6 +84,7 @@ private func previewEntry(
     )
 }
 
+#if os(iOS)
 #Preview("Small · Morning", as: .systemSmall) {
     ShuttleHomeWidget()
 } timeline: {
@@ -152,3 +154,5 @@ private func previewEntry(
         style: .minimal
     )
 }
+#endif
+#endif

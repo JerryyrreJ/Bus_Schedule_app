@@ -16,7 +16,9 @@ import BusScheduleCore
 @main
 struct Bus_ScheduleWidgetBundle: WidgetBundle {
     var body: some Widget {
+        #if os(iOS)
         ShuttleHomeWidget()
+        #endif
         ShuttleLockRectangularWidget()
         ShuttleLockCircularWidget()
         ShuttleLockInlineWidget()

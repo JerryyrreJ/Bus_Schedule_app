@@ -71,7 +71,7 @@ public extension Schedule {
     static func firstDeparture(for location: Location, dayType: DayType) -> String? {
         for busTime in getCurrentSchedule(dayType) {
             let t = location == .phIINewCampus ? busTime.phII : busTime.phI
-            if !t.isEmpty && t != BusScheduleStrings.returnImmediately { return t }
+            if !t.isEmpty && t != BusScheduleStrings.returnImmediatelyToken { return t }
         }
         return nil
     }
@@ -81,13 +81,13 @@ public extension Schedule {
             let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
 
             if location == .phIParkingLot,
-               timeString == BusScheduleStrings.returnImmediately,
+               timeString == BusScheduleStrings.returnImmediatelyToken,
                secondsFromTimeString(busTime.phII) != nil {
                 return .returnImmediately(startTime: busTime.phII)
             }
 
             if !timeString.isEmpty,
-               timeString != BusScheduleStrings.returnImmediately,
+               timeString != BusScheduleStrings.returnImmediatelyToken,
                secondsFromTimeString(timeString) != nil {
                 return .scheduled(time: timeString)
             }
@@ -99,7 +99,7 @@ public extension Schedule {
     static func lastDeparture(for location: Location, dayType: DayType) -> String? {
         for busTime in getCurrentSchedule(dayType).reversed() {
             let t = location == .phIINewCampus ? busTime.phII : busTime.phI
-            if !t.isEmpty && t != BusScheduleStrings.returnImmediately { return t }
+            if !t.isEmpty && t != BusScheduleStrings.returnImmediatelyToken { return t }
         }
         return nil
     }
@@ -111,7 +111,7 @@ public extension Schedule {
         let schedule = getCurrentSchedule(dayType)
         for index in schedule.indices {
             let busTime = schedule[index]
-            guard busTime.phI == BusScheduleStrings.returnImmediately,
+            guard busTime.phI == BusScheduleStrings.returnImmediatelyToken,
                   let startSeconds = secondsFromTimeString(busTime.phII),
                   index + 1 < schedule.count,
                   let endSeconds = secondsFromTimeString(schedule[index + 1].phII) else {
@@ -344,7 +344,7 @@ public extension Schedule {
         var lastSeen: Int? = nil
         for busTime in getCurrentSchedule(dayType) {
             let timeString = location == .phIINewCampus ? busTime.phII : busTime.phI
-            guard timeString != BusScheduleStrings.returnImmediately,
+            guard timeString != BusScheduleStrings.returnImmediatelyToken,
                   let s = secondsFromTimeString(timeString),
                   s <= currentSecondsFromMidnight else {
                 continue

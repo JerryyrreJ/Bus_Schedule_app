@@ -17,7 +17,10 @@ let package = Package(
     targets: [
         .target(
             name: "BusScheduleCore",
-            dependencies: []
+            dependencies: [],
+            resources: [
+                .process("Resources"),
+            ]
         ),
         .testTarget(
             name: "BusScheduleCoreTests",

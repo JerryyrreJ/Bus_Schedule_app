@@ -7,6 +7,7 @@ import WidgetKit
 import SwiftUI
 import BusScheduleCore
 
+#if os(watchOS)
 #Preview("Corner · Morning", as: .accessoryCorner) {
     ShuttleWatchCorner()
 } timeline: {
@@ -30,3 +31,4 @@ import BusScheduleCore
 } timeline: {
     WatchPreviewFixtures.cornerServiceEnded
 }
+#endif

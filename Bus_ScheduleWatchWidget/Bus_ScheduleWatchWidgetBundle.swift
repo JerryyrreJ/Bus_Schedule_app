@@ -17,6 +17,8 @@ struct Bus_ScheduleWatchWidgetBundle: WidgetBundle {
         ShuttleWatchCircular()
         ShuttleWatchRectangular()
         ShuttleWatchInline()
+        #if os(watchOS)
         ShuttleWatchCorner()
+        #endif
     }
 }

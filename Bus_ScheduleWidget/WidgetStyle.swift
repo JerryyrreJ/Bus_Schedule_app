@@ -18,8 +18,14 @@ enum WidgetStyle: String, AppEnum {
 
     static var caseDisplayRepresentations: [WidgetStyle: DisplayRepresentation] {
         [
-            .card: DisplayRepresentation(title: "Card", subtitle: "Nested rounded cards"),
-            .minimal: DisplayRepresentation(title: "Minimal", subtitle: "Whitespace + hairlines")
+            .card: DisplayRepresentation(
+                title: "Card",
+                subtitle: "Nested rounded cards"
+            ),
+            .minimal: DisplayRepresentation(
+                title: "Minimal",
+                subtitle: "Whitespace + hairlines"
+            )
         ]
     }
 }

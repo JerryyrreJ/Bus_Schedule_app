@@ -8,6 +8,7 @@
 //
 
 import WidgetKit
+import SwiftUI
 import BusScheduleCore
 
 struct StyledShuttleEntry: TimelineEntry {
@@ -41,5 +42,11 @@ struct IntentShuttleProvider: AppIntentTimelineProvider {
             StyledShuttleEntry(base: $0, style: configuration.style)
         }
         return Timeline(entries: styled, policy: base.policy)
+    }
+
+    func recommendations() -> [AppIntentRecommendation<ShuttleHomeIntent>] {
+        [
+            AppIntentRecommendation(intent: ShuttleHomeIntent(), description: "Campus Shuttle")
+        ]
     }
 }
