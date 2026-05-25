@@ -374,6 +374,79 @@ struct ScheduleQueriesTests {
         #expect(WidgetUrgency.from(secondsRemaining: seconds(0, 5, 1)) == .normal)
     }
 
+    @Test("Reminder choices expose all default lead times for a scheduled bus")
+    func reminderChoicesExposeDefaultLeadTimes() throws {
+        let date = try localDate(day: 7, hour: 7, minute: 50)
+        let choices = Schedule.reminderChoices(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            referenceDate: date
+        )
+
+        #expect(choices.map(\.leadMinutes) == [5, 10, 15])
+        #expect(choices.allSatisfy { $0.isAvailable })
+        #expect(choices.allSatisfy { $0.departureTime == "08:10" })
+
+        let calendar = Calendar.current
+        let triggerComponents = try choices.map {
+            calendar.dateComponents([.hour, .minute], from: try #require($0.triggerDate))
+        }
+        #expect(triggerComponents.map(\.hour) == [8, 8, 7])
+        #expect(triggerComponents.map(\.minute) == [5, 0, 55])
+    }
+
+    @Test("Reminder choices disable lead times that cannot still fire")
+    func reminderChoicesDisableTooLateLeadTimes() throws {
+        let date = try localDate(day: 7, hour: 8, minute: 6, second: 0)
+        let choices = Schedule.reminderChoices(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            referenceDate: date
+        )
+
+        #expect(choices.map(\.leadMinutes) == [5, 10, 15])
+        #expect(choices.map(\.isAvailable) == [false, false, false])
+        #expect(choices.allSatisfy { $0.departureTime == "08:10" })
+        #expect(choices.allSatisfy { $0.departureDate != nil })
+    }
+
+    @Test("Reminder choices reject exact trigger boundary")
+    func reminderChoicesRejectExactTriggerBoundary() throws {
+        let date = try localDate(day: 7, hour: 8, minute: 0, second: 0)
+        let choices = Schedule.reminderChoices(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            referenceDate: date,
+            leadMinutes: [10]
+        )
+
+        #expect(choices.count == 1)
+        #expect(choices[0].departureTime == "08:10")
+        #expect(choices[0].triggerDate == nil)
+        #expect(!choices[0].isAvailable)
+    }
+
+    @Test("Reminder choices are unavailable during loop and after service")
+    func reminderChoicesUnavailableWhenNoScheduledNextBus() throws {
+        let loopDate = try localDate(day: 7, hour: 8, minute: 45)
+        let loopChoices = Schedule.reminderChoices(
+            for: .phIParkingLot,
+            dayType: .weekday,
+            referenceDate: loopDate
+        )
+        #expect(loopChoices.allSatisfy { !$0.isAvailable })
+        #expect(loopChoices.allSatisfy { $0.departureDate == nil })
+
+        let afterServiceDate = try localDate(day: 7, hour: 23, minute: 0)
+        let afterServiceChoices = Schedule.reminderChoices(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            referenceDate: afterServiceDate
+        )
+        #expect(afterServiceChoices.allSatisfy { !$0.isAvailable })
+        #expect(afterServiceChoices.allSatisfy { $0.departureDate == nil })
+    }
+
     @Test("Sync comparison uses revision first and device ID as tie breaker")
     func syncComparisonUsesRevisionAndDeviceTieBreaker() {
         #expect(SharedStore.compareIncoming(

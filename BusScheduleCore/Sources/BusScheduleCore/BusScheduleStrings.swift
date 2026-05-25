@@ -71,6 +71,19 @@ public enum BusScheduleStrings {
     public static let watchRectangularDescription = localized("Route, time, and countdown.")
     public static let watchInlineDescription = localized("Single-line summary alongside the time.")
     public static let watchCornerDescription = localized("Corner of the Infograph face.")
+    public static let remindThisBus = localized("Remind this bus")
+    public static let reminderUnavailable = localized("Reminder unavailable")
+    public static let reminderTooClose = localized("This bus is too close to set a reminder.")
+    public static let reminderSetPrefix = localized("Reminder set")
+    public static let cancelReminder = localized("Cancel Reminder")
+    public static let changeReminder = localized("Change Reminder")
+    public static let notificationsOff = localized("Notifications are off")
+    public static let notificationPermissionMessage = localized("Turn on notifications in Settings to get bus reminders.")
+    public static let notificationSchedulingFailed = localized("Could not schedule this reminder.")
+    public static let openSettings = localized("Open Settings")
+    public static let leavesAt = localized("leaves at")
+    public static let minutesLeft = localized("minutes left")
+    public static let before = localized("before")
 
     public static func resource(_ key: StaticString) -> LocalizedStringResource {
         LocalizedStringResource(
@@ -110,6 +123,14 @@ public enum BusScheduleStrings {
 
     public static func other(_ value: String) -> String {
         "\(other) \(value)"
+    }
+
+    public static func reminderSet(_ value: Int) -> String {
+        "\(reminderSetPrefix) \(minutes(value)) \(before)"
+    }
+
+    public static func reminderNotificationBody(route: String, departureTime: String, leadMinutes: Int) -> String {
+        "\(route) \(leavesAt) \(departureTime). \(leadMinutes) \(minutesLeft)."
     }
 
     private static func localized(_ key: String) -> String {

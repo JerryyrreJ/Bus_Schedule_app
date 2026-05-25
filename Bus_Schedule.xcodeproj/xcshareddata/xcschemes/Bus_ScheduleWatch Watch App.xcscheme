@@ -21,20 +21,6 @@
                ReferencedContainer = "container:Bus_Schedule.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F735ECF2CE1BE3700C1BB86"
-               BuildableName = "BNBU Bus.app"
-               BlueprintName = "Bus_Schedule"
-               ReferencedContainer = "container:Bus_Schedule.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

@@ -13,6 +13,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var location: Location = SharedStore.readPrimaryRoute()
     @State private var dayType: DayType = .weekday
+    @StateObject private var reminderScheduler = LocalBusReminderScheduler()
 
     private var locationBinding: Binding<Location> {
         Binding(
@@ -57,6 +58,14 @@ struct ContentView: View {
 
             Spacer(minLength: 24)
 
+            BusReminderButton(
+                location: location,
+                dayType: dayType,
+                scheduler: reminderScheduler
+            )
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+
             DayTypeToggleView(dayType: dayTypeBinding)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -66,11 +75,13 @@ struct ContentView: View {
         .onAppear {
             applyRoutePreference()
             applyEffectiveDayType()
+            Task { await reminderScheduler.refresh() }
         }
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             applyRoutePreference()
             applyEffectiveDayType()
+            Task { await reminderScheduler.refresh() }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
             applyEffectiveDayType()
