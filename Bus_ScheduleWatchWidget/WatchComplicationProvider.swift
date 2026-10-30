@@ -27,31 +27,11 @@ struct WatchComplicationProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<ShuttleEntry>) -> Void) {
-        let now = Date()
-        var entries: [ShuttleEntry] = [snapshot(at: now)]
-        var cursor = now
-
-        for _ in 0..<8 {
-            let resolved = DayType.effective(for: cursor)
-            guard let next = Schedule.nextInterestingRefreshDate(
-                for: SharedStore.readPrimaryRoute(),
-                dayType: resolved.dayType,
-                isManualOverride: resolved.isManualOverride,
-                after: cursor
-            ) else {
-                break
-            }
-
-            if next <= cursor {
-                break
-            }
-
-            entries.append(snapshot(at: next))
-            cursor = next
-        }
-
-        let fallbackRefresh = now.addingTimeInterval(6 * 60 * 60)
-        completion(Timeline(entries: entries, policy: .after(fallbackRefresh)))
+        completion(ShuttleProvider.makeComplicationTimeline(
+            from: Date(),
+            primaryRoute: SharedStore.readPrimaryRoute(),
+            resolveDayType: { DayType.effective(for: $0) }
+        ))
     }
 
     private func snapshot(at date: Date) -> ShuttleEntry {
@@ -64,3 +44,4 @@ struct WatchComplicationProvider: TimelineProvider {
         )
     }
 }
+

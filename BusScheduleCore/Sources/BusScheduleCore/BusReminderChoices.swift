@@ -38,10 +38,11 @@ public extension Schedule {
         for location: Location,
         dayType: DayType,
         referenceDate: Date,
-        leadMinutes: [Int] = defaultReminderLeadMinutes
+        leadMinutes: [Int] = defaultReminderLeadMinutes,
+        calendar: Calendar = .current
     ) -> [BusReminderChoice] {
         let sortedLeadMinutes = leadMinutes.sorted()
-        let currentSeconds = secondsFromMidnight(for: referenceDate)
+        let currentSeconds = secondsFromMidnight(for: referenceDate, calendar: calendar)
 
         guard case let .scheduled(time, departureSeconds) = nextDepartureState(
             for: location,
@@ -58,8 +59,9 @@ public extension Schedule {
             }
         }
 
-        let startOfDay = Calendar.current.startOfDay(for: referenceDate)
-        let departureDate = startOfDay.addingTimeInterval(TimeInterval(departureSeconds))
+        let departureDate = calendar.date(bySettingHour: departureSeconds / 3600,
+                                          minute: departureSeconds % 3600 / 60,
+                                          second: 0, of: referenceDate) ?? referenceDate
 
         return sortedLeadMinutes.map { minutes in
             let triggerDate = departureDate.addingTimeInterval(-TimeInterval(minutes * 60))
@@ -72,3 +74,4 @@ public extension Schedule {
         }
     }
 }
+

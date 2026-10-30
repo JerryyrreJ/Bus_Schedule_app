@@ -93,8 +93,7 @@ struct MediumWidgetView: View {
         ).isEmpty
     }
 
-    // Manual override should keep using the currently forced day type when
-    // computing "tomorrow first" in the medium widget's night states.
+    // Tomorrow follows automatic detection because today's override expires at midnight.
     private var nextServiceDayType: DayType {
         Schedule.nextServiceDay(
             after: entry.date,
@@ -738,3 +737,4 @@ struct MediumWidgetView: View {
             )
     }
 }
+

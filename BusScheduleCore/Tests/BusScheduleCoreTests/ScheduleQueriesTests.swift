@@ -70,8 +70,8 @@ struct ScheduleQueriesTests {
         )
     }
 
-    @Test("No-more-buses refresh targets tomorrow service start")
-    func noMoreBusesRefreshUsesTomorrowServiceStart() throws {
+    @Test("No-more-buses refresh re-resolves service at midnight")
+    func noMoreBusesRefreshUsesMidnight() throws {
         let calendar = Calendar(identifier: .gregorian)
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
@@ -91,8 +91,8 @@ struct ScheduleQueriesTests {
         #expect(refreshComponents.year == 2026)
         #expect(refreshComponents.month == 5)
         #expect(refreshComponents.day == 8)
-        #expect(refreshComponents.hour == 7)
-        #expect(refreshComponents.minute == 30)
+        #expect(refreshComponents.hour == 0)
+        #expect(refreshComponents.minute == 0)
     }
 
     @Test("Circular refresh drops from 1H+ into minute mode at the hour boundary")
@@ -225,8 +225,8 @@ struct ScheduleQueriesTests {
         #expect(Schedule.secondsFromTimeString("8") == nil)
     }
 
-    @Test("Refresh date advances past Return Immediately deadline")
-    func refreshDateAdvancesPastReturnImmediatelyDeadline() throws {
+    @Test("Refresh date reaches Return Immediately deadline")
+    func refreshDateReachesReturnImmediatelyDeadline() throws {
         let calendar = Calendar(identifier: .gregorian)
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
@@ -246,7 +246,7 @@ struct ScheduleQueriesTests {
         let components = calendar.dateComponents([.hour, .minute, .second], from: refreshDate)
         #expect(components.hour == 8)
         #expect(components.minute == 50)
-        #expect(components.second == 1)
+        #expect(components.second == 0)
     }
 
     @Test("Refresh date follows minute boundary below one hour")
@@ -317,8 +317,8 @@ struct ScheduleQueriesTests {
         #expect(DayType.nextOverrideInCycle(from: .saturday, currentAuto: .sundayOrHoliday) == nil)
     }
 
-    @Test("Next service day preserves manual override and auto-detects tomorrow otherwise")
-    func nextServiceDayPreservesManualOverrideOrAutoDetectsTomorrow() throws {
+    @Test("Next service day uses automatic type after override expiration")
+    func nextServiceDayUsesAutomaticTypeAfterOverrideExpiration() throws {
         let friday = try localDate(day: 8, hour: 23)
 
         let manual = Schedule.nextServiceDay(
@@ -326,7 +326,7 @@ struct ScheduleQueriesTests {
             currentDayType: .weekday,
             isManualOverride: true
         )
-        #expect(manual.dayType == .weekday)
+        #expect(manual.dayType == .saturday)
 
         let automatic = Schedule.nextServiceDay(
             after: friday,
@@ -355,8 +355,8 @@ struct ScheduleQueriesTests {
 
     @Test("Countdown formatter covers immediate seconds minutes and hours")
     func countdownFormatterCoversDisplayModes() {
-        #expect(CountdownFormatter.string(forSeconds: 0) == "Now")
-        #expect(CountdownFormatter.string(forSeconds: -1) == "Now")
+        #expect(CountdownFormatter.string(forSeconds: 0) == BusScheduleStrings.now)
+        #expect(CountdownFormatter.string(forSeconds: -1) == BusScheduleStrings.now)
         #expect(CountdownFormatter.string(forSeconds: 45) == "45s")
         #expect(CountdownFormatter.string(forSeconds: 185) == "3m 05s")
         #expect(CountdownFormatter.string(forSeconds: 300) == "5m 00s")
@@ -510,3 +510,4 @@ struct ScheduleQueriesTests {
         #expect(components.second == 0)
     }
 }
+

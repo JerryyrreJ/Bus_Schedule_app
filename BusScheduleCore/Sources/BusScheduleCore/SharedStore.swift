@@ -39,15 +39,26 @@ public enum SharedStore {
         return defaults
     }
 
+    private static var preferenceStore: PreferenceStore {
+        PreferenceStore(
+            defaults: localDefaults,
+            overrideDidChange: {
+                WidgetCenter.shared.reloadAllTimelines()
+                NotificationCenter.default.post(name: .dayTypeOverrideDidChange, object: nil)
+            },
+            routeDidChange: {
+                WidgetCenter.shared.reloadAllTimelines()
+                NotificationCenter.default.post(name: .primaryRouteDidChange, object: nil)
+            }
+        )
+    }
+
     /// Returns the persisted manual override from the local App Group store
     /// (nil = follow auto). Manual overrides expire at the next local midnight.
     /// Cross-device convergence is handled by WatchConnectivity writing the
     /// latest received state into this store.
     public static func readOverride(for date: Date = Date()) -> DayType? {
-        let localValue = localDefaults.string(forKey: dayTypeOverrideKey) ?? ""
-        guard !localValue.isEmpty else { return nil }
-        guard !isOverrideExpired(for: date) else { return nil }
-        return DayType(rawValue: localValue)
+        preferenceStore.readOverride(for: date)
     }
 
     /// Persist a manual override. Pass nil to clear. Writes locally and then
@@ -109,14 +120,7 @@ public enum SharedStore {
     }
 
     static func localOverrideExpiresAt() -> TimeInterval {
-        if localDefaults.object(forKey: dayTypeOverrideExpiresAtKey) != nil {
-            return localDefaults.double(forKey: dayTypeOverrideExpiresAtKey)
-        }
-
-        let rawValue = localOverrideValue()
-        let revision = localOverrideUpdatedAt()
-        guard !rawValue.isEmpty, revision > 0 else { return 0 }
-        return nextStartOfDay(after: Date(timeIntervalSince1970: revision)).timeIntervalSince1970
+        preferenceStore.overrideExpiresAt
     }
 
     static func localOverrideSourceDeviceID() -> String {
@@ -182,31 +186,7 @@ public enum SharedStore {
         sourceDeviceID: String,
         expiresAt: TimeInterval
     ) -> Bool {
-        let currentValue = localOverrideValue()
-        let currentUpdatedAt = localOverrideUpdatedAt()
-        let currentSourceDeviceID = localOverrideSourceDeviceID()
-        let currentExpiresAt = localOverrideExpiresAt()
-
-        guard currentValue != value ||
-              currentUpdatedAt != updatedAt ||
-              currentSourceDeviceID != sourceDeviceID ||
-              currentExpiresAt != expiresAt else {
-            return false
-        }
-
-        writeLocalOverrideValue(
-            value,
-            updatedAt: updatedAt,
-            sourceDeviceID: sourceDeviceID,
-            expiresAt: expiresAt
-        )
-
-        guard currentValue != value else { return false }
-
-        print("[BusSchedule.WCSync] override changed '\(currentValue)' → '\(value)' — reload widgets, post notification")
-        WidgetCenter.shared.reloadAllTimelines()
-        NotificationCenter.default.post(name: .dayTypeOverrideDidChange, object: nil)
-        return true
+        preferenceStore.applyOverride(value, revision: updatedAt, source: sourceDeviceID, expiresAt: expiresAt)
     }
 
     @discardableResult
@@ -216,40 +196,7 @@ public enum SharedStore {
         sourceDeviceID: String,
         expiresAt: TimeInterval
     ) -> Bool {
-        if isOverrideExpired(for: Date()) {
-            print("[BusSchedule.WCSync] override local expired, accepting incoming '\(value)'@\(updatedAt)#\(sourceDeviceID)")
-            return applyOverrideValue(
-                value,
-                updatedAt: updatedAt,
-                sourceDeviceID: sourceDeviceID,
-                expiresAt: expiresAt
-            )
-        }
-
-        let localDecision = compareIncoming(
-            incomingRevision: updatedAt,
-            incomingSourceDeviceID: sourceDeviceID,
-            localRevision: localOverrideUpdatedAt(),
-            localSourceDeviceID: localOverrideSourceDeviceID()
-        )
-        if localDecision < 0 {
-            print("[BusSchedule.WCSync] override reject: incoming \(updatedAt)@\(sourceDeviceID) is older than local \(localOverrideUpdatedAt())@\(localOverrideSourceDeviceID())")
-            return false
-        }
-        if localDecision == 0,
-           localOverrideValue() == value,
-           localOverrideExpiresAt() == expiresAt {
-            print("[BusSchedule.WCSync] override reject: revision tie and same value")
-            return false
-        }
-
-        print("[BusSchedule.WCSync] override apply incoming '\(value)'@\(updatedAt)#\(sourceDeviceID) (was @\(localOverrideUpdatedAt())#\(localOverrideSourceDeviceID()))")
-        return applyOverrideValue(
-            value,
-            updatedAt: updatedAt,
-            sourceDeviceID: sourceDeviceID,
-            expiresAt: expiresAt
-        )
+        preferenceStore.applyIncomingOverride(value, revision: updatedAt, source: sourceDeviceID, expiresAt: expiresAt)
     }
 
     @discardableResult
@@ -258,24 +205,7 @@ public enum SharedStore {
         updatedAt: TimeInterval,
         sourceDeviceID: String
     ) -> Bool {
-        let currentRoute = readPrimaryRoute()
-        let currentUpdatedAt = localPrimaryRouteUpdatedAt()
-        let currentSourceDeviceID = localPrimaryRouteSourceDeviceID()
-
-        guard currentRoute != route ||
-              currentUpdatedAt != updatedAt ||
-              currentSourceDeviceID != sourceDeviceID else {
-            return false
-        }
-
-        writeLocalPrimaryRoute(route, updatedAt: updatedAt, sourceDeviceID: sourceDeviceID)
-
-        guard currentRoute != route else { return false }
-
-        print("[BusSchedule.WCSync] route changed \(currentRoute.rawValue) → \(route.rawValue) — reload widgets, post notification")
-        WidgetCenter.shared.reloadAllTimelines()
-        NotificationCenter.default.post(name: .primaryRouteDidChange, object: nil)
-        return true
+        preferenceStore.applyRoute(route, revision: updatedAt, source: sourceDeviceID)
     }
 
     @discardableResult
@@ -284,39 +214,16 @@ public enum SharedStore {
         updatedAt: TimeInterval,
         sourceDeviceID: String
     ) -> Bool {
-        guard let route = Location(rawValue: value) else {
-            print("[BusSchedule.WCSync] route reject: unknown raw value '\(value)'")
-            return false
-        }
-
-        let localDecision = compareIncoming(
-            incomingRevision: updatedAt,
-            incomingSourceDeviceID: sourceDeviceID,
-            localRevision: localPrimaryRouteUpdatedAt(),
-            localSourceDeviceID: localPrimaryRouteSourceDeviceID()
-        )
-        if localDecision < 0 {
-            print("[BusSchedule.WCSync] route reject: incoming \(updatedAt)@\(sourceDeviceID) is older than local \(localPrimaryRouteUpdatedAt())@\(localPrimaryRouteSourceDeviceID())")
-            return false
-        }
-        if localDecision == 0, hasStoredPrimaryRoute(), readPrimaryRoute() == route {
-            print("[BusSchedule.WCSync] route reject: revision tie and same value")
-            return false
-        }
-
-        print("[BusSchedule.WCSync] route apply incoming \(value)@\(updatedAt)#\(sourceDeviceID) (was @\(localPrimaryRouteUpdatedAt())#\(localPrimaryRouteSourceDeviceID()))")
-        return applyPrimaryRoute(route, updatedAt: updatedAt, sourceDeviceID: sourceDeviceID)
+        preferenceStore.applyIncomingRoute(value, revision: updatedAt, source: sourceDeviceID)
     }
 
-    static func nextStartOfDay(after date: Date) -> Date {
-        let calendar = Calendar.current
+    static func nextStartOfDay(after date: Date, calendar: Calendar = .current) -> Date {
         let startOfDay = calendar.startOfDay(for: date)
         return calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay.addingTimeInterval(24 * 60 * 60)
     }
 
     static func isOverrideExpired(for date: Date) -> Bool {
-        let expiresAt = localOverrideExpiresAt()
-        return expiresAt > 0 && date.timeIntervalSince1970 >= expiresAt
+        preferenceStore.isOverrideExpired(for: date)
     }
 
     static func nextLogicalRevision(after current: TimeInterval) -> TimeInterval {
@@ -355,8 +262,8 @@ public extension Notification.Name {
     public extension DayType {
     /// Auto-detect day type from calendar weekday. Holiday detection is
     /// intentionally absent — the manual override exists to compensate.
-    static func automatic(for date: Date) -> DayType {
-        let weekday = Calendar.current.component(.weekday, from: date)
+    static func automatic(for date: Date, calendar: Calendar = .current) -> DayType {
+        let weekday = calendar.component(.weekday, from: date)
         switch weekday {
         case 7:  return .saturday
         case 1:  return .sundayOrHoliday
@@ -616,3 +523,4 @@ final class WatchPreferenceSync: @unchecked Sendable {
     func publishLocalPreferences() {}
 }
 #endif
+
