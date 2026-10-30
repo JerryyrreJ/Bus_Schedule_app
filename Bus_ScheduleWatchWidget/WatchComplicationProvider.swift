@@ -2,8 +2,8 @@
 //  WatchComplicationProvider.swift
 //  Bus_ScheduleWatchWidget
 //
-//  A watch-specific provider that emits sparse timeline entries and relies on
-//  dynamic date/progress views for the circular complication's live countdown.
+//  A watch-specific provider with bounded countdown/state-change entries and
+//  a reload request when those entries end.
 //
 
 import Foundation
