@@ -134,17 +134,17 @@ public extension Schedule {
 
     static func nextServiceDay(
         after referenceDate: Date,
-        currentDayType: DayType,
-        isManualOverride: Bool
+        currentDayType _: DayType,
+        isManualOverride _: Bool,
+        calendar: Calendar = .current
     ) -> (dayType: DayType, date: Date) {
-        let calendar = Calendar.current
+        // Overrides expire at midnight, so tomorrow always uses its automatic type.
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
-        let dayType = isManualOverride ? currentDayType : DayType.automatic(for: tomorrow)
-        return (dayType, tomorrow)
+        return (DayType.automatic(for: tomorrow, calendar: calendar), tomorrow)
     }
 
-    static func secondsFromMidnight(for date: Date) -> Int {
-        let cal = Calendar.current
+    static func secondsFromMidnight(for date: Date, calendar: Calendar = .current) -> Int {
+        let cal = calendar
         let h = cal.component(.hour, from: date)
         let m = cal.component(.minute, from: date)
         let s = cal.component(.second, from: date)
@@ -182,9 +182,10 @@ public extension Schedule {
     static func circularComplicationState(
         for location: Location,
         dayType: DayType,
-        at date: Date
+        at date: Date,
+        calendar: Calendar = .current
     ) -> CircularComplicationState {
-        let currentSecondsFromMidnight = secondsFromMidnight(for: date)
+        let currentSecondsFromMidnight = secondsFromMidnight(for: date, calendar: calendar)
 
         if location == .phIParkingLot {
             let state = nextDepartureState(
@@ -205,16 +206,19 @@ public extension Schedule {
             return .noMoreBuses
         }
 
-        let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let departureDate = startOfDay.addingTimeInterval(TimeInterval(next.departureSecondsFromMidnight))
+        let departureDate = calendar.date(bySettingHour: next.departureSecondsFromMidnight / 3600,
+                                          minute: next.departureSecondsFromMidnight % 3600 / 60,
+                                          second: 0, of: date) ?? date
 
         if let previousSeconds = previousDepartureSeconds(
             for: location,
             dayType: dayType,
             currentSecondsFromMidnight: currentSecondsFromMidnight
         ) {
-            let gaugeStartDate = startOfDay.addingTimeInterval(TimeInterval(previousSeconds))
+            let gaugeStartDate = calendar.date(bySettingHour: previousSeconds / 3600,
+                                               minute: previousSeconds % 3600 / 60,
+                                               second: 0, of: date) ?? startOfDay
             return .scheduled(
                 departureTime: next.time,
                 departureDate: departureDate,
@@ -231,54 +235,50 @@ public extension Schedule {
     static func nextInterestingRefreshDate(
         for location: Location,
         dayType: DayType,
-        isManualOverride: Bool = false,
-        after date: Date
+        isManualOverride _: Bool = false,
+        after date: Date,
+        calendar: Calendar = .current
     ) -> Date? {
-        let currentSecondsFromMidnight = secondsFromMidnight(for: date)
-        let startOfDay = Calendar.current.startOfDay(for: date)
+        let currentSeconds = secondsFromMidnight(for: date, calendar: calendar)
+        // Midnight changes the effective day type, override validity and "tomorrow".
+        var candidates = [SharedStore.nextStartOfDay(after: date, calendar: calendar)]
 
-        switch circularComplicationState(for: location, dayType: dayType, at: date) {
-        case let .scheduled(_, departureDate, _):
+        switch circularComplicationState(for: location, dayType: dayType, at: date, calendar: calendar) {
+        case let .scheduled(_, departureDate, _), let .beforeFirstDeparture(_, departureDate):
             if let nextBoundary = nextCircularCountdownRefreshDate(
-                departureDate: departureDate,
-                referenceDate: date
+                departureDate: departureDate, referenceDate: date
             ) {
-                return nextBoundary
+                candidates.append(nextBoundary)
             }
-            return departureDate.addingTimeInterval(1)
-
-        case let .beforeFirstDeparture(_, departureDate):
-            if let nextBoundary = nextCircularCountdownRefreshDate(
-                departureDate: departureDate,
-                referenceDate: date
-            ) {
-                return nextBoundary
-            }
-            return departureDate.addingTimeInterval(1)
-
         case .returnImmediately:
             if let deadline = returnImmediatelyDeadline(
-                dayType: dayType,
-                currentSecondsFromMidnight: currentSecondsFromMidnight
-            ),
-               let endSeconds = secondsFromTimeString(deadline) {
-                return startOfDay.addingTimeInterval(TimeInterval(endSeconds) + 1)
+                dayType: dayType, currentSecondsFromMidnight: currentSeconds
+            ), let end = secondsFromTimeString(deadline),
+               let endDate = calendar.date(bySettingHour: end / 3600,
+                                           minute: end % 3600 / 60,
+                                           second: 0, of: date) {
+                candidates.append(endDate)
             }
-            return nil
-
         case .noMoreBuses:
-            let next = nextServiceDay(
-                after: date,
-                currentDayType: dayType,
-                isManualOverride: isManualOverride
-            )
-            guard let first = firstServiceStart(for: location, dayType: next.dayType),
-                  let firstSeconds = secondsFromTimeString(first.startTime) else {
-                return nil
-            }
-            return Calendar.current.startOfDay(for: next.date)
-                .addingTimeInterval(TimeInterval(firstSeconds))
+            break // Re-resolve at midnight before planning the next day's service.
         }
+
+        // A pickup loop may start before the next fixed-time departure.
+        if location == .phIParkingLot {
+            let schedule = getCurrentSchedule(dayType)
+            for index in schedule.indices {
+                guard schedule[index].phI == BusScheduleStrings.returnImmediatelyToken,
+                      index == schedule.startIndex || schedule[index - 1].phI != BusScheduleStrings.returnImmediatelyToken,
+                      let start = secondsFromTimeString(schedule[index].phII),
+                      start > currentSeconds,
+                      let startDate = calendar.date(bySettingHour: start / 3600,
+                                                    minute: start % 3600 / 60,
+                                                    second: 0, of: date) else { continue }
+                candidates.append(startDate)
+            }
+        }
+
+        return candidates.filter { $0 > date }.min()
     }
 
     static func waitProgressFraction(
@@ -325,7 +325,7 @@ public extension Schedule {
             return nextBoundary > referenceDate ? nextBoundary : nil
         }
 
-        let nextBoundary = departureDate.addingTimeInterval(1)
+        let nextBoundary = departureDate
         return nextBoundary > referenceDate ? nextBoundary : nil
     }
 
@@ -373,3 +373,4 @@ public enum CountdownFormatter {
         return mins == 0 ? "\(hours)h" : "\(hours)h \(mins)m"
     }
 }
+

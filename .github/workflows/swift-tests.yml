@@ -1,0 +1,23 @@
+name: Swift tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift toolchain
+        run: swift --version
+      - name: Core unit tests
+        run: swift test --package-path BusScheduleCore --enable-code-coverage
+      - name: Build iOS app and extensions
+        run: >-
+          xcodebuild -project Bus_Schedule.xcodeproj
+          -scheme Bus_Schedule
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath /tmp/BusScheduleDerivedData
+          CODE_SIGNING_ALLOWED=NO build

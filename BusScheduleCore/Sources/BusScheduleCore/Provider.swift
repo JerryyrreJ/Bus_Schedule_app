@@ -80,4 +80,36 @@ public struct ShuttleProvider: TimelineProvider {
         let nextRefresh = now.addingTimeInterval(4 * 60 * 60)
         return Timeline(entries: entries, policy: .after(nextRefresh))
     }
+
+    /// Bound the number of entries, then ask WidgetKit to reload when they end.
+    /// Inject the resolver so tests do not need an entitled App Group container.
+    public static func makeComplicationTimeline(
+        from now: Date,
+        primaryRoute: Location,
+        calendar: Calendar = .current,
+        resolveDayType: (Date) -> (dayType: DayType, isManualOverride: Bool)
+    ) -> Timeline<ShuttleEntry> {
+        func entry(at date: Date) -> ShuttleEntry {
+            let resolved = resolveDayType(date)
+            return ShuttleEntry(date: date, primaryRoute: primaryRoute,
+                                dayType: resolved.dayType, isManualOverride: resolved.isManualOverride)
+        }
+
+        let horizon = now.addingTimeInterval(6 * 60 * 60)
+        var entries = [entry(at: now)]
+        var cursor = now
+        while entries.count < 60, cursor < horizon {
+            let resolved = resolveDayType(cursor)
+            guard let boundary = Schedule.nextInterestingRefreshDate(
+                for: primaryRoute, dayType: resolved.dayType,
+                isManualOverride: resolved.isManualOverride, after: cursor, calendar: calendar
+            ), boundary > cursor else { break }
+            let next = min(boundary, horizon)
+            entries.append(entry(at: next))
+            cursor = next
+        }
+        return Timeline(entries: entries, policy: .atEnd)
+    }
+
 }
+

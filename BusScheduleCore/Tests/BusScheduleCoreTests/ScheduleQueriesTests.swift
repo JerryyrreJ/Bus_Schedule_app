@@ -4,6 +4,13 @@ import Foundation
 
 @Suite("Schedule service start queries")
 struct ScheduleQueriesTests {
+    // Exercise the public local-time defaults without inheriting the user's calendar system.
+    private var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        return calendar
+    }
+
     private func seconds(_ hour: Int, _ minute: Int, _ second: Int = 0) -> Int {
         ((hour * 60) + minute) * 60 + second
     }
@@ -17,7 +24,7 @@ struct ScheduleQueriesTests {
         second: Int = 0,
         sourceLocation: SourceLocation = #_sourceLocation
     ) throws -> Date {
-        try #require(Calendar.current.date(from: DateComponents(
+        try #require(calendar.date(from: DateComponents(
             year: year,
             month: month,
             day: day,
@@ -70,9 +77,9 @@ struct ScheduleQueriesTests {
         )
     }
 
-    @Test("No-more-buses refresh targets tomorrow service start")
-    func noMoreBusesRefreshUsesTomorrowServiceStart() throws {
-        let calendar = Calendar(identifier: .gregorian)
+    @Test("No-more-buses refresh re-resolves service at midnight")
+    func noMoreBusesRefreshUsesMidnight() throws {
+        let calendar = self.calendar
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
             month: 5,
@@ -91,13 +98,13 @@ struct ScheduleQueriesTests {
         #expect(refreshComponents.year == 2026)
         #expect(refreshComponents.month == 5)
         #expect(refreshComponents.day == 8)
-        #expect(refreshComponents.hour == 7)
-        #expect(refreshComponents.minute == 30)
+        #expect(refreshComponents.hour == 0)
+        #expect(refreshComponents.minute == 0)
     }
 
     @Test("Circular refresh drops from 1H+ into minute mode at the hour boundary")
     func circularRefreshDropsIntoMinuteModeAtOneHourBoundary() throws {
-        let calendar = Calendar(identifier: .gregorian)
+        let calendar = self.calendar
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
             month: 5,
@@ -225,9 +232,9 @@ struct ScheduleQueriesTests {
         #expect(Schedule.secondsFromTimeString("8") == nil)
     }
 
-    @Test("Refresh date advances past Return Immediately deadline")
-    func refreshDateAdvancesPastReturnImmediatelyDeadline() throws {
-        let calendar = Calendar(identifier: .gregorian)
+    @Test("Refresh date reaches Return Immediately deadline")
+    func refreshDateReachesReturnImmediatelyDeadline() throws {
+        let calendar = self.calendar
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
             month: 5,
@@ -246,12 +253,12 @@ struct ScheduleQueriesTests {
         let components = calendar.dateComponents([.hour, .minute, .second], from: refreshDate)
         #expect(components.hour == 8)
         #expect(components.minute == 50)
-        #expect(components.second == 1)
+        #expect(components.second == 0)
     }
 
     @Test("Refresh date follows minute boundary below one hour")
     func refreshDateFollowsMinuteBoundaryBelowOneHour() throws {
-        let calendar = Calendar(identifier: .gregorian)
+        let calendar = self.calendar
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
             month: 5,
@@ -317,8 +324,8 @@ struct ScheduleQueriesTests {
         #expect(DayType.nextOverrideInCycle(from: .saturday, currentAuto: .sundayOrHoliday) == nil)
     }
 
-    @Test("Next service day preserves manual override and auto-detects tomorrow otherwise")
-    func nextServiceDayPreservesManualOverrideOrAutoDetectsTomorrow() throws {
+    @Test("Next service day uses automatic type after override expiration")
+    func nextServiceDayUsesAutomaticTypeAfterOverrideExpiration() throws {
         let friday = try localDate(day: 8, hour: 23)
 
         let manual = Schedule.nextServiceDay(
@@ -326,7 +333,7 @@ struct ScheduleQueriesTests {
             currentDayType: .weekday,
             isManualOverride: true
         )
-        #expect(manual.dayType == .weekday)
+        #expect(manual.dayType == .saturday)
 
         let automatic = Schedule.nextServiceDay(
             after: friday,
@@ -335,8 +342,8 @@ struct ScheduleQueriesTests {
         )
         #expect(automatic.dayType == .saturday)
 
-        let manualComponents = Calendar.current.dateComponents([.year, .month, .day], from: manual.date)
-        let automaticComponents = Calendar.current.dateComponents([.year, .month, .day], from: automatic.date)
+        let manualComponents = calendar.dateComponents([.year, .month, .day], from: manual.date)
+        let automaticComponents = calendar.dateComponents([.year, .month, .day], from: automatic.date)
         #expect(manualComponents.year == 2026)
         #expect(manualComponents.month == 5)
         #expect(manualComponents.day == 9)
@@ -355,8 +362,8 @@ struct ScheduleQueriesTests {
 
     @Test("Countdown formatter covers immediate seconds minutes and hours")
     func countdownFormatterCoversDisplayModes() {
-        #expect(CountdownFormatter.string(forSeconds: 0) == "Now")
-        #expect(CountdownFormatter.string(forSeconds: -1) == "Now")
+        #expect(CountdownFormatter.string(forSeconds: 0) == BusScheduleStrings.now)
+        #expect(CountdownFormatter.string(forSeconds: -1) == BusScheduleStrings.now)
         #expect(CountdownFormatter.string(forSeconds: 45) == "45s")
         #expect(CountdownFormatter.string(forSeconds: 185) == "3m 05s")
         #expect(CountdownFormatter.string(forSeconds: 300) == "5m 00s")
@@ -387,7 +394,7 @@ struct ScheduleQueriesTests {
         #expect(choices.allSatisfy { $0.isAvailable })
         #expect(choices.allSatisfy { $0.departureTime == "08:10" })
 
-        let calendar = Calendar.current
+        let calendar = self.calendar
         let triggerComponents = try choices.map {
             calendar.dateComponents([.hour, .minute], from: try #require($0.triggerDate))
         }
@@ -491,7 +498,7 @@ struct ScheduleQueriesTests {
 
     @Test("Next start of day is local midnight after the reference date")
     func nextStartOfDayUsesLocalMidnightAfterReferenceDate() throws {
-        let calendar = Calendar.current
+        let calendar = self.calendar
         let date = try #require(calendar.date(from: DateComponents(
             year: 2026,
             month: 5,
@@ -510,3 +517,4 @@ struct ScheduleQueriesTests {
         #expect(components.second == 0)
     }
 }
+

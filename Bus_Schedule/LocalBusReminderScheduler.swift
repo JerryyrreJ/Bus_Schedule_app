@@ -1,10 +1,4 @@
-//
-//  LocalBusReminderScheduler.swift
-//  Bus_Schedule
-//
-//  One-shot local notification scheduling for the next visible bus departure.
-//
-
+// iOS notification adapter and observable state for the shared reminder coordinator.
 import Combine
 import Foundation
 import UserNotifications
@@ -12,195 +6,86 @@ import BusScheduleCore
 
 @MainActor
 final class LocalBusReminderScheduler: ObservableObject {
-    struct ActiveReminder: Codable, Equatable, Identifiable, Sendable {
-        let id: String
-        let locationRawValue: String
-        let dayTypeRawValue: String
-        let departureTime: String
-        let departureTimestamp: TimeInterval
-        let triggerTimestamp: TimeInterval
-        let leadMinutes: Int
-        let createdTimestamp: TimeInterval
-
-        var departureDate: Date {
-            Date(timeIntervalSince1970: departureTimestamp)
-        }
-
-        var triggerDate: Date {
-            Date(timeIntervalSince1970: triggerTimestamp)
-        }
-
-        func matches(location: Location, departureDate: Date, referenceDate: Date = Date()) -> Bool {
-            locationRawValue == location.rawValue &&
-                abs(self.departureDate.timeIntervalSince(departureDate)) < 1 &&
-                triggerDate > referenceDate
-        }
-    }
-
-    enum SchedulingError: Error, LocalizedError {
-        case unavailableChoice
-        case notificationsDenied
-
-        var errorDescription: String? {
-            switch self {
-            case .unavailableChoice:
-                return BusScheduleStrings.notificationSchedulingFailed
-            case .notificationsDenied:
-                return BusScheduleStrings.notificationPermissionMessage
-            }
-        }
-    }
-
-    static let identifierPrefix = "bus-schedule.next-departure."
+    typealias ActiveReminder = BusReminderScheduler.ActiveReminder
+    typealias SchedulingError = BusReminderScheduler.SchedulingError
 
     @Published private(set) var activeReminder: ActiveReminder?
+    private let scheduler: BusReminderScheduler
 
-    private let center: UNUserNotificationCenter
-    private let defaults: UserDefaults
-    private let activeReminderKey = "activeNextBusReminder"
-
-    init(
-        center: UNUserNotificationCenter = .current(),
-        defaults: UserDefaults = SharedStore.localDefaults
-    ) {
-        self.center = center
-        self.defaults = defaults
-        self.activeReminder = Self.readActiveReminder(from: defaults, key: activeReminderKey)
+    init(center: UNUserNotificationCenter = .current(), defaults: UserDefaults = SharedStore.localDefaults) {
+        scheduler = BusReminderScheduler(center: SystemBusReminderNotificationCenter(center: center), defaults: defaults)
+        activeReminder = scheduler.activeReminder
     }
 
-    func activeReminder(
-        matching location: Location,
-        departureDate: Date?,
-        referenceDate: Date = Date()
-    ) -> ActiveReminder? {
-        guard let departureDate else { return nil }
-        guard let activeReminder,
-              activeReminder.matches(
-                location: location,
-                departureDate: departureDate,
-                referenceDate: referenceDate
-              ) else {
-            return nil
-        }
-        return activeReminder
+    func activeReminder(matching location: Location, departureDate: Date?, referenceDate: Date = Date()) -> ActiveReminder? {
+        scheduler.activeReminder(matching: location, departureDate: departureDate, referenceDate: referenceDate)
     }
 
     func refresh(referenceDate: Date = Date()) async {
-        let pendingIDs = await managedPendingRequestIDs()
-
-        guard let activeReminder else {
-            if !pendingIDs.isEmpty {
-                center.removePendingNotificationRequests(withIdentifiers: pendingIDs)
-            }
-            return
-        }
-
-        if activeReminder.triggerDate <= referenceDate || !pendingIDs.contains(activeReminder.id) {
-            center.removePendingNotificationRequests(withIdentifiers: pendingIDs)
-            clearActiveReminder()
-            return
-        }
-
-        let staleIDs = pendingIDs.filter { $0 != activeReminder.id }
-        if !staleIDs.isEmpty {
-            center.removePendingNotificationRequests(withIdentifiers: staleIDs)
-        }
+        await scheduler.refresh(referenceDate: referenceDate)
+        activeReminder = scheduler.activeReminder
     }
 
     func schedule(choice: BusReminderChoice, location: Location, dayType: DayType) async throws {
-        guard let departureTime = choice.departureTime,
-              let departureDate = choice.departureDate,
-              let triggerDate = choice.triggerDate,
-              triggerDate > Date() else {
-            throw SchedulingError.unavailableChoice
-        }
-
-        try await ensureNotificationAuthorization()
-
-        let existingIDs = await managedPendingRequestIDs()
-        if !existingIDs.isEmpty {
-            center.removePendingNotificationRequests(withIdentifiers: existingIDs)
-        }
-
-        let id = Self.identifierPrefix + UUID().uuidString
-        let content = UNMutableNotificationContent()
-        content.title = BusScheduleStrings.campusShuttle
-        content.body = BusScheduleStrings.reminderNotificationBody(
-            route: WidgetTheme.routeLabel(for: location),
-            departureTime: departureTime,
-            leadMinutes: choice.leadMinutes
-        )
-        content.sound = .default
-        content.threadIdentifier = "bus-schedule.next-departure"
-        content.userInfo = [
-            "location": location.rawValue,
-            "dayType": dayType.rawValue,
-            "departureTime": departureTime,
-            "leadMinutes": choice.leadMinutes,
-        ]
-
-        let components = Calendar.current.dateComponents(
-            [.year, .month, .day, .hour, .minute, .second],
-            from: triggerDate
-        )
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-
-        try await center.add(request)
-
-        let active = ActiveReminder(
-            id: id,
-            locationRawValue: location.rawValue,
-            dayTypeRawValue: dayType.rawValue,
-            departureTime: departureTime,
-            departureTimestamp: departureDate.timeIntervalSince1970,
-            triggerTimestamp: triggerDate.timeIntervalSince1970,
-            leadMinutes: choice.leadMinutes,
-            createdTimestamp: Date().timeIntervalSince1970
-        )
-        writeActiveReminder(active)
+        defer { activeReminder = scheduler.activeReminder }
+        try await scheduler.schedule(choice: choice, location: location, dayType: dayType)
     }
 
     func cancelActiveReminder() {
-        center.removePendingNotificationRequests(withIdentifiers: [activeReminder?.id].compactMap { $0 })
-        clearActiveReminder()
+        scheduler.cancelActiveReminder()
+        activeReminder = scheduler.activeReminder
     }
+}
 
-    private func ensureNotificationAuthorization() async throws {
+@MainActor
+private final class SystemBusReminderNotificationCenter: BusReminderNotificationCenter {
+    private let center: UNUserNotificationCenter
+
+    init(center: UNUserNotificationCenter) { self.center = center }
+
+    func ensureAuthorization() async throws {
         let settings = await center.notificationSettings()
-
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
             return
         case .notDetermined:
             let granted = try await center.requestAuthorization(options: [.alert, .sound])
-            guard granted else { throw SchedulingError.notificationsDenied }
+            guard granted else { throw BusReminderScheduler.SchedulingError.notificationsDenied }
         case .denied:
-            throw SchedulingError.notificationsDenied
+            throw BusReminderScheduler.SchedulingError.notificationsDenied
         @unknown default:
-            throw SchedulingError.notificationsDenied
+            throw BusReminderScheduler.SchedulingError.notificationsDenied
         }
     }
 
-    private func managedPendingRequestIDs() async -> [String] {
-        await center.pendingNotificationRequests()
-            .map(\.identifier)
-            .filter { $0.hasPrefix(Self.identifierPrefix) }
+    func pendingReminderIDs() async -> [String] {
+        await center.pendingNotificationRequests().map(\.identifier)
+            .filter { $0.hasPrefix(BusReminderScheduler.identifierPrefix) }
     }
 
-    private func writeActiveReminder(_ reminder: ActiveReminder) {
-        guard let data = try? JSONEncoder().encode(reminder) else { return }
-        defaults.set(data, forKey: activeReminderKey)
-        activeReminder = reminder
+    func addReminder(id: String, choice: BusReminderChoice, location: Location, dayType: DayType) async throws {
+        guard let departureTime = choice.departureTime, let triggerDate = choice.triggerDate else {
+            throw BusReminderScheduler.SchedulingError.unavailableChoice
+        }
+        let content = UNMutableNotificationContent()
+        content.title = BusScheduleStrings.campusShuttle
+        content.body = BusScheduleStrings.reminderNotificationBody(
+            route: WidgetTheme.routeLabel(for: location), departureTime: departureTime, leadMinutes: choice.leadMinutes
+        )
+        content.sound = .default
+        content.threadIdentifier = "bus-schedule.next-departure"
+        content.userInfo = ["location": location.rawValue, "dayType": dayType.rawValue,
+                            "departureTime": departureTime, "leadMinutes": choice.leadMinutes]
+        var components = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second], from: triggerDate
+        )
+        components.timeZone = Calendar.current.timeZone
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        try await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 
-    private func clearActiveReminder() {
-        defaults.removeObject(forKey: activeReminderKey)
-        activeReminder = nil
-    }
-
-    private static func readActiveReminder(from defaults: UserDefaults, key: String) -> ActiveReminder? {
-        guard let data = defaults.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(ActiveReminder.self, from: data)
+    func removeReminders(withIDs ids: [String]) {
+        guard !ids.isEmpty else { return }
+        center.removePendingNotificationRequests(withIdentifiers: ids)
     }
 }
