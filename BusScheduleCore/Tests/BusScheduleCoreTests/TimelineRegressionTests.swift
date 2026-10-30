@@ -23,12 +23,16 @@ struct TimelineRegressionTests {
             let next = try #require(Schedule.nextInterestingRefreshDate(
                 for: .phIParkingLot, dayType: .weekday, after: now, calendar: calendar
             ))
-            #expect(next == (try date(hour: expectedHour, minute: expectedMinute)))
+            let loopStart = try date(hour: expectedHour, minute: expectedMinute)
+            #expect(next <= loopStart) // Earlier minute-countdown refreshes are also valid.
+            let timeline = ShuttleProvider.makeComplicationTimeline(from: now, primaryRoute: .phIParkingLot,
+                calendar: calendar, resolveDayType: { _ in (.weekday, false) })
+            #expect(timeline.entries.contains { $0.date == loopStart })
             let before = Schedule.nextDepartureState(for: .phIParkingLot, dayType: .weekday,
-                currentSecondsFromMidnight: Schedule.secondsFromMidnight(for: next.addingTimeInterval(-1), calendar: calendar))
+                currentSecondsFromMidnight: Schedule.secondsFromMidnight(for: loopStart.addingTimeInterval(-1), calendar: calendar))
             if case .returnImmediately = before { Issue.record("Loop began before its boundary") }
             let atBoundary = Schedule.circularComplicationState(for: .phIParkingLot, dayType: .weekday,
-                                                               at: next, calendar: calendar)
+                                                               at: loopStart, calendar: calendar)
             guard case .returnImmediately = atBoundary else { Issue.record("Loop did not begin at boundary"); return }
         }
     }
