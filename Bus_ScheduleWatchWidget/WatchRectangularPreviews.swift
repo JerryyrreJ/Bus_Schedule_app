@@ -30,3 +30,21 @@ import BusScheduleCore
 } timeline: {
     WatchPreviewFixtures.rectangularServiceEnded
 }
+
+#if DEBUG
+#Preview("Rectangular · Countdown boundaries", as: .accessoryRectangular) {
+    ShuttleWatchRectangular()
+} timeline: {
+    WidgetLayoutPreview.entry(.now)
+    WidgetLayoutPreview.entry(.seconds)
+    WidgetLayoutPreview.entry(.oneMinute)
+    WidgetLayoutPreview.entry(.nineMinutes)
+    WidgetLayoutPreview.entry(.tenMinutes)
+    WidgetLayoutPreview.entry(.fiftyNineMinutes)
+    WidgetLayoutPreview.entry(.oneHour)
+    WidgetLayoutPreview.entry(.hourAndFortyFive)
+    WidgetLayoutPreview.entry(.nineHours)
+    WidgetLayoutPreview.entry(.tenHours)
+    WidgetLayoutPreview.entry(.longest)
+}
+#endif

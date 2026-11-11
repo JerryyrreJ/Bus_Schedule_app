@@ -54,13 +54,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A bus is continuously available. After dropping off passengers at Phase 1, it returns directly to Phase 2 campus for pickup."
+            "value": "A bus is continuously available. After arriving at Phase I, passengers can board right away and it returns immediately to Phase II."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "班车持续可用。乘客在一期下车后，车辆会直接返回二期校区接人。"
+            "value": "该时段班车循环接驳：车辆到达一期下客后即刻折返二期，无需等满，上车即走。"
           }
         }
       }
@@ -1389,6 +1389,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "前"
+          }
+        }
+      }
+    },
+    "%lld min before": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min before"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提前 %lld 分钟"
+          }
+        }
+      }
+    },
+    "Reminder set · %lldm before": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder set · %lldm before"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已设提前 %lld 分钟提醒"
+          }
+        }
+      }
+    },
+    "%@ leaves at %@. %lld minutes left.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ leaves at %2$@. %3$lld minutes left."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 将于 %2$@ 发车，还有 %3$lld 分钟。"
+          }
+        }
+      }
+    },
+    "Leaves right away": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leaves right away"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "到站即返 · 上车即走"
+          }
+        }
+      }
+    },
+    "Last bus today": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last bus today"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日末班"
           }
         }
       }

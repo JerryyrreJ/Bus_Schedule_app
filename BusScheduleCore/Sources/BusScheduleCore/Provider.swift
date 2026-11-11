@@ -15,6 +15,10 @@ public struct ShuttleEntry: TimelineEntry {
     public let primaryRoute: Location
     public let dayType: DayType
     public let isManualOverride: Bool
+    #if DEBUG
+    /// Layout fixtures only; never present in a Release build or persisted.
+    public var previewCountdownSeconds: Int?
+    #endif
 
     public init(date: Date, primaryRoute: Location, dayType: DayType, isManualOverride: Bool) {
         self.date = date
@@ -26,6 +30,31 @@ public struct ShuttleEntry: TimelineEntry {
     public var currentSecondsFromMidnight: Int {
         Schedule.secondsFromMidnight(for: date)
     }
+
+    public func nextDepartureState(for route: Location) -> NextDepartureState {
+        #if DEBUG
+        if let seconds = previewCountdownSeconds {
+            return .scheduled(time: previewTime(after: seconds), departureSecondsFromMidnight: currentSecondsFromMidnight + seconds)
+        }
+        #endif
+        return Schedule.nextDepartureState(for: route, dayType: dayType, currentSecondsFromMidnight: currentSecondsFromMidnight)
+    }
+
+    public func upcomingDepartures(for route: Location, limit: Int) -> [String] {
+        #if DEBUG
+        if let seconds = previewCountdownSeconds {
+            return (0..<max(0, limit)).map { previewTime(after: seconds + ($0 + 1) * 1800) }
+        }
+        #endif
+        return Schedule.upcomingDepartures(for: route, dayType: dayType, currentSecondsFromMidnight: currentSecondsFromMidnight, limit: limit)
+    }
+
+    #if DEBUG
+    private func previewTime(after seconds: Int) -> String {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date.addingTimeInterval(TimeInterval(seconds)))
+        return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
+    }
+    #endif
 }
 
 public struct ShuttleProvider: TimelineProvider {
@@ -34,8 +63,18 @@ public struct ShuttleProvider: TimelineProvider {
     public init() {}
 
     public func placeholder(in context: Context) -> ShuttleEntry {
-        ShuttleEntry(
-            date: Date(),
+        Self.placeholderEntry()
+    }
+
+    public static func placeholderEntry() -> ShuttleEntry {
+        let representativeDate = Calendar.current.date(
+            bySettingHour: 8,
+            minute: 2,
+            second: 0,
+            of: Date()
+        ) ?? Date()
+        return ShuttleEntry(
+            date: representativeDate,
             primaryRoute: .phIINewCampus,
             dayType: .weekday,
             isManualOverride: false
@@ -62,23 +101,46 @@ public struct ShuttleProvider: TimelineProvider {
         )
     }
 
-    /// Builds the full timeline: minute-resolution entries for the first
-    /// hour, then 5-minute entries for the next three hours, and a 4-hour
-    /// refresh policy. Exposed for the intent-based provider.
+    /// Builds a 4-hour timeline aligned to exact `:00` whole-minute boundaries so
+    /// scheduled departures (HH:mm:00) and midnight rollovers transition on the
+    /// exact second instead of lagging by arbitrary sub-minute or 5-minute offsets.
     public static func makeTimeline(from now: Date) -> Timeline<ShuttleEntry> {
+        let route = SharedStore.readPrimaryRoute()
+        return makeTimeline(from: now, primaryRoute: route) { date in
+            DayType.effective(for: date)
+        }
+    }
+
+    static func makeTimeline(
+        from now: Date,
+        primaryRoute: Location,
+        resolveDayType: (Date) -> (dayType: DayType, isManualOverride: Bool)
+    ) -> Timeline<ShuttleEntry> {
+        let endDate = now.addingTimeInterval(4 * 60 * 60)
         var entries: [ShuttleEntry] = []
+        entries.reserveCapacity(241)
 
-        for i in 0..<60 {
-            let t = now.addingTimeInterval(Double(i) * 60)
-            entries.append(snapshot(at: t))
-        }
-        for i in 1...36 {
-            let t = now.addingTimeInterval(60 * 60 + Double(i) * 5 * 60)
-            entries.append(snapshot(at: t))
+        func makeEntry(at date: Date) -> ShuttleEntry {
+            let resolved = resolveDayType(date)
+            return ShuttleEntry(
+                date: date,
+                primaryRoute: primaryRoute,
+                dayType: resolved.dayType,
+                isManualOverride: resolved.isManualOverride
+            )
         }
 
-        let nextRefresh = now.addingTimeInterval(4 * 60 * 60)
-        return Timeline(entries: entries, policy: .after(nextRefresh))
+        entries.append(makeEntry(at: now))
+
+        let firstMinuteTimestamp = floor(now.timeIntervalSince1970 / 60.0) * 60.0 + 60.0
+        var cursor = Date(timeIntervalSince1970: firstMinuteTimestamp)
+
+        while cursor < endDate {
+            entries.append(makeEntry(at: cursor))
+            cursor = cursor.addingTimeInterval(60)
+        }
+
+        return Timeline(entries: entries, policy: .after(endDate))
     }
 
     /// Bound the number of entries, then ask WidgetKit to reload when they end.

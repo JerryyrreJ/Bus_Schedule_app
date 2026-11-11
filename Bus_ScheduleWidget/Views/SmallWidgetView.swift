@@ -17,52 +17,81 @@ struct SmallWidgetView: View {
     let entry: ShuttleEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header
-            Spacer(minLength: 0)
-            content
-            Spacer(minLength: 0)
-            upcomingFooter
+        GeometryReader { geo in
+            let isCompact = geo.size.height < 118
+            VStack(alignment: .leading, spacing: 0) {
+                header(isCompact: isCompact)
+                Spacer(minLength: 2)
+                content(isCompact: isCompact)
+                Spacer(minLength: 2)
+                upcomingFooter(isCompact: isCompact)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 
     // MARK: Header
 
-    private var header: some View {
-        HStack(spacing: 6) {
+    private func header(isCompact: Bool) -> some View {
+        let isLoop: Bool = {
+            if case .returnImmediately = entry.nextDepartureState(for: entry.primaryRoute) {
+                return true
+            }
+            return false
+        }()
+
+        return HStack(spacing: 5) {
             Image(systemName: WidgetTheme.busSymbol)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-            Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+
+            ViewThatFits(in: .horizontal) {
+                Text(WidgetTheme.routeLabel(for: entry.primaryRoute))
+                    .font(.system(size: isCompact ? 12.5 : 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                Text(WidgetTheme.compactRouteLabel(for: entry.primaryRoute))
+                    .font(.system(size: isCompact ? 12.5 : 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            if isLoop {
+                Spacer(minLength: 4)
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: isCompact ? 9.5 : 10, weight: .bold))
+                    .foregroundStyle(Color.green)
+                    .frame(width: isCompact ? 18 : 19, height: isCompact ? 18 : 19)
+                    .background(
+                        Circle()
+                            .fill(Color.green.opacity(0.15))
+                    )
+                    .padding(.vertical, -2)
+            }
         }
     }
 
     // MARK: Body — branches on state
 
     @ViewBuilder
-    private var content: some View {
-        let state = Schedule.nextDepartureState(
-            for: entry.primaryRoute,
-            dayType: entry.dayType,
-            currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-        )
+    private func content(isCompact: Bool) -> some View {
+        let state = entry.nextDepartureState(for: entry.primaryRoute)
 
         switch state {
         case let .scheduled(time, departureSeconds):
-            scheduledBlock(time: time, departureSeconds: departureSeconds)
+            scheduledBlock(time: time, departureSeconds: departureSeconds, isCompact: isCompact)
         case .returnImmediately:
-            returnImmediatelyBlock
+            returnImmediatelyBlock(isCompact: isCompact)
         case .noMoreBuses:
-            noMoreBusesBlock
+            noMoreBusesBlock(isCompact: isCompact)
         }
     }
 
     @ViewBuilder
-    private func scheduledBlock(time: String, departureSeconds: Int) -> some View {
+    private func scheduledBlock(time: String, departureSeconds: Int, isCompact: Bool) -> some View {
         let remaining = Schedule.secondsRemaining(
             until: departureSeconds,
             from: entry.currentSecondsFromMidnight
@@ -70,71 +99,47 @@ struct SmallWidgetView: View {
         let urgency = WidgetUrgency.from(secondsRemaining: remaining)
         let isCritical = urgency == .critical
 
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: isCompact ? 1 : 2) {
             Text(time)
                 .font(.system(
-                    size: isCritical ? 50 : 56,
+                    size: isCompact ? (isCritical ? 40 : 44) : (isCritical ? 46 : 50),
                     weight: WidgetTheme.bigTimeWeight(for: urgency),
                     design: .rounded
                 ))
                 .monospacedDigit()
                 .kerning(-1.5)
                 .foregroundStyle(isCritical ? Color.red : Color.primary)
-                .minimumScaleFactor(0.55)
+                .minimumScaleFactor(0.6)
                 .lineLimit(1)
 
-            HStack {
-                Text(isCritical ? BusScheduleStrings.departingIn : BusScheduleStrings.nextDepartureLower)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 4)
-                Text(compactCountdownString(forSeconds: remaining))
-                    .font(.system(
-                        size: isCritical ? 19 : 17,
-                        weight: isCritical ? .heavy : .bold,
-                        design: .rounded
-                    ))
-                    .monospacedDigit()
-                    .foregroundStyle(WidgetTheme.countdownColor(for: urgency, location: entry.primaryRoute))
-                    .lineLimit(1)
-                    .layoutPriority(1)
-            }
+            WidgetCountdownLabel(
+                seconds: remaining,
+                caption: isCritical ? BusScheduleStrings.departingIn : BusScheduleStrings.leavesIn,
+                fontSize: isCompact ? (isCritical ? 16 : 14.5) : (isCritical ? 18 : 16),
+                color: WidgetTheme.countdownColor(for: urgency, location: entry.primaryRoute)
+            )
+            .layoutPriority(1)
         }
     }
 
-    private var returnImmediatelyBlock: some View {
-        let deadline = Schedule.returnImmediatelyDeadline(
-            dayType: entry.dayType,
-            currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-        )
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(BusScheduleStrings.returnImmediately)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+    private func returnImmediatelyBlock(isCompact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: isCompact ? 3 : 4) {
+            Text(BusScheduleStrings.loopActive)
+                .font(.system(size: isCompact ? 22 : 25, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.green)
-                .minimumScaleFactor(0.7)
-                .lineLimit(2)
-            Text(BusScheduleStrings.continuousPickupLoopActive)
-                .font(.system(size: 11))
+                .minimumScaleFactor(0.75)
+                .lineLimit(1)
+
+            Text(BusScheduleStrings.continuousShuttleShort)
+                .font(.system(size: isCompact ? 11.5 : 12, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
-                .lineLimit(2)
-            if let deadline {
-                Text(BusScheduleStrings.until(deadline))
-                    .font(.system(size: 11, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color.green)
-                    .monospacedDigit()
-            }
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
-        .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            ContainerRelativeShape()
-                .fill(Color.green.opacity(0.16))
-        )
     }
 
-    private var noMoreBusesBlock: some View {
+    private func noMoreBusesBlock(isCompact: Bool) -> some View {
         let nextDay = Schedule.nextServiceDay(
             after: entry.date,
             currentDayType: entry.dayType,
@@ -142,78 +147,115 @@ struct SmallWidgetView: View {
         )
         let serviceStart = Schedule.firstServiceStart(for: entry.primaryRoute, dayType: nextDay.dayType)
 
-        return VStack(alignment: .leading, spacing: 4) {
+        return VStack(alignment: .leading, spacing: isCompact ? 3 : 4) {
             Text(BusScheduleStrings.serviceEnded)
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(.system(size: isCompact ? 14.5 : 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
             if let serviceStart {
-                Text(BusScheduleStrings.firstTomorrow)
-                    .font(.system(size: 9, weight: .heavy))
-                    .tracking(1.2)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 3) {
+                    Text(BusScheduleStrings.firstTomorrow)
+                        .font(.system(size: 9, weight: .heavy))
+                        .tracking(0.8)
+                        .foregroundStyle(.secondary)
+                    if case .returnImmediately = serviceStart {
+                        Text("· \(BusScheduleStrings.loop)")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.green)
+                    }
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+
                 Text(serviceStart.compactDisplayText)
-                    .font(.system(size: 30, weight: .ultraLight, design: .rounded))
+                    .font(.system(size: isCompact ? 26 : 30, weight: .light, design: .rounded))
                     .monospacedDigit()
-                    .kerning(-1.0)
+                    .kerning(-0.8)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(0.7)
             } else {
                 Text(BusScheduleStrings.serviceResumesTomorrow)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
             }
         }
     }
 
-    // MARK: Upcoming footer (skipped for non-scheduled states)
+    // MARK: Footer (upcoming times for scheduled; loop deadline for returnImmediately)
 
     @ViewBuilder
-    private var upcomingFooter: some View {
-        let state = Schedule.nextDepartureState(
-            for: entry.primaryRoute,
-            dayType: entry.dayType,
-            currentSecondsFromMidnight: entry.currentSecondsFromMidnight
-        )
-        if case .scheduled = state {
-            let upcoming = Schedule.upcomingDepartures(
-                for: entry.primaryRoute,
-                dayType: entry.dayType,
-                currentSecondsFromMidnight: entry.currentSecondsFromMidnight,
-                limit: 2
-            )
+    private func upcomingFooter(isCompact: Bool) -> some View {
+        let state = entry.nextDepartureState(for: entry.primaryRoute)
+        switch state {
+        case .scheduled:
+            let upcoming = entry.upcomingDepartures(for: entry.primaryRoute, limit: 2)
             if !upcoming.isEmpty {
-                HStack {
-                    Text(BusScheduleStrings.then)
-                        .font(.system(size: 9, weight: .heavy))
-                        .tracking(1.2)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    HStack(spacing: 8) {
-                        ForEach(upcoming, id: \.self) { time in
-                            Text(time)
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(.primary)
+                footerContainer(isCompact: isCompact) {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 6) {
+                            Text(BusScheduleStrings.then)
+                                .font(.system(size: 9, weight: .heavy))
+                                .tracking(1.1)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            upcomingTimes(upcoming, isCompact: isCompact)
                         }
+                        .fixedSize(horizontal: true, vertical: false)
+                        upcomingTimes(upcoming, isCompact: isCompact)
+                            .minimumScaleFactor(0.75)
                     }
                 }
-                .padding(.top, 6)
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.18))
-                        .frame(height: 0.5)
+            }
+
+        case .returnImmediately:
+            if let deadline = Schedule.returnImmediatelyDeadline(
+                dayType: entry.dayType,
+                currentSecondsFromMidnight: entry.currentSecondsFromMidnight
+            ) {
+                footerContainer(isCompact: isCompact) {
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text(BusScheduleStrings.untilUpper)
+                            .font(.system(size: 9, weight: .heavy))
+                            .tracking(1.0)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Text(deadline)
+                            .font(.system(size: isCompact ? 12.5 : 13.5, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                    }
                 }
             }
+
+        case .noMoreBuses:
+            EmptyView()
         }
     }
 
-    private func compactCountdownString(forSeconds seconds: Int) -> String {
-        guard seconds >= 3600 else {
-            return CountdownFormatter.string(forSeconds: seconds)
-        }
+    private func footerContainer<Content: View>(
+        isCompact: Bool,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, isCompact ? 4 : 5)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.18))
+                    .frame(height: 0.5)
+            }
+    }
 
-        let hours = seconds / 3600
-        return seconds % 3600 == 0 ? "\(hours)H" : "\(hours)H+"
+    private func upcomingTimes(_ times: [String], isCompact: Bool) -> some View {
+        Text(times.joined(separator: " · "))
+            .font(.system(size: isCompact ? 12 : 13, weight: .semibold, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(.primary)
+            .lineLimit(1)
     }
 }

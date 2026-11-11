@@ -10,80 +10,82 @@ import Foundation
 public enum BusScheduleStrings {
     public static let returnImmediatelyToken = "Return Immediately"
 
-    public static let campusShuttle = localized("Campus Shuttle")
-    public static let homeWidgetDescription = localized("Next departure, countdown, and upcoming times.")
-    public static let phaseI = localized("Phase I")
-    public static let phaseII = localized("Phase II")
-    public static let compactPhaseIToPhaseII = localized("Ph I→II")
-    public static let compactPhaseIIToPhaseI = localized("Ph II→I")
-    public static let minimalPhaseIToPhaseII = localized("1 → 2")
-    public static let minimalPhaseIIToPhaseI = localized("2 → 1")
-    public static let weekday = localized("Weekday")
-    public static let saturday = localized("Saturday")
-    public static let holiday = localized("Holiday")
-    public static let sunHoliday = localized("Sun/Holiday")
-    public static let manual = localized("Manual")
-    public static let auto = localized("Auto")
-    public static let nextDeparture = localized("Next Departure")
-    public static let nextDepartureLower = localized("Next departure")
-    public static let upcoming = localized("Upcoming")
-    public static let timeLeft = localized("Time Left")
-    public static let departingIn = localized("Departing in")
-    public static let leavesIn = localized("Leaves in")
-    public static let returnImmediately = localized("Return Immediately")
-    public static let returnImmediatelyHelp = localized("A bus is continuously available. After dropping off passengers at Phase 1, it returns directly to Phase 2 campus for pickup.")
-    public static let serviceEnded = localized("Service ended")
-    public static let serviceEndedToday = localized("Service ended today")
-    public static let serviceResumesTomorrow = localized("Service resumes tomorrow.")
-    public static let continuousPickupLoopActive = localized("Continuous pickup loop is active.")
-    public static let firstTomorrow = localized("FIRST TOMORROW")
-    public static let firstTomorrowLower = localized("First tomorrow")
-    public static let then = localized("THEN")
-    public static let thenLower = localized("then")
-    public static let loop = localized("Loop")
-    public static let loopActive = localized("Loop active")
-    public static let done = localized("Done")
-    public static let noMoreBusesToday = localized("No more buses today")
-    public static let noMoreDeparturesAfterThis = localized("No more departures after this")
-    public static let unavailable = localized("Unavailable")
-    public static let now = localized("Now")
-    public static let inPrefix = localized("in")
-    public static let untilPrefix = localized("Until")
-    public static let untilLowerPrefix = localized("until")
-    public static let firstTomorrowPrefix = localized("First tomorrow")
-    public static let tmrwPrefix = localized("tmrw")
-    public static let untilUpper = localized("UNTIL")
-    public static let other = localized("Other")
-    public static let last = localized("Last")
-    public static let lastTodayWasPrefix = localized("Last today was")
-    public static let lastUpper = localized("LAST")
-    public static let phaseIToPhaseII = localized("Phase I → Phase II")
-    public static let phaseIIToPhaseI = localized("Phase II → Phase I")
-    public static let compactHourPlus = localized("1H+")
-    public static let shuttleRectangular = localized("Shuttle · Rectangular")
-    public static let shuttleCircular = localized("Shuttle · Circular")
-    public static let shuttleInline = localized("Shuttle · Inline")
-    public static let shuttleCorner = localized("Shuttle · Corner")
-    public static let lockRectangularDescription = localized("Lock-screen widget with route, departure time, and countdown.")
-    public static let lockCircularDescription = localized("Compact bus icon and departure time.")
-    public static let lockInlineDescription = localized("Single-line departure summary next to the time.")
-    public static let watchCircularDescription = localized("Bus icon and next departure.")
-    public static let watchRectangularDescription = localized("Route, time, and countdown.")
-    public static let watchInlineDescription = localized("Single-line summary alongside the time.")
-    public static let watchCornerDescription = localized("Corner of the Infograph face.")
-    public static let remindThisBus = localized("Remind this bus")
-    public static let reminderUnavailable = localized("Reminder unavailable")
-    public static let reminderTooClose = localized("This bus is too close to set a reminder.")
-    public static let reminderSetPrefix = localized("Reminder set")
-    public static let cancelReminder = localized("Cancel Reminder")
-    public static let changeReminder = localized("Change Reminder")
-    public static let notificationsOff = localized("Notifications are off")
-    public static let notificationPermissionMessage = localized("Turn on notifications in Settings to get bus reminders.")
-    public static let notificationSchedulingFailed = localized("Could not schedule this reminder.")
-    public static let openSettings = localized("Open Settings")
-    public static let leavesAt = localized("leaves at")
-    public static let minutesLeft = localized("minutes left")
-    public static let before = localized("before")
+    public static var campusShuttle: String { localized("Campus Shuttle") }
+    public static var homeWidgetDescription: String { localized("Next departure, countdown, and upcoming times.") }
+    public static var phaseI: String { localized("Phase I") }
+    public static var phaseII: String { localized("Phase II") }
+    public static var compactPhaseIToPhaseII: String { localized("Ph I→II") }
+    public static var compactPhaseIIToPhaseI: String { localized("Ph II→I") }
+    public static var minimalPhaseIToPhaseII: String { localized("1 → 2") }
+    public static var minimalPhaseIIToPhaseI: String { localized("2 → 1") }
+    public static var weekday: String { localized("Weekday") }
+    public static var saturday: String { localized("Saturday") }
+    public static var holiday: String { localized("Holiday") }
+    public static var sunHoliday: String { localized("Sun/Holiday") }
+    public static var manual: String { localized("Manual") }
+    public static var auto: String { localized("Auto") }
+    public static var nextDeparture: String { localized("Next Departure") }
+    public static var nextDepartureLower: String { localized("Next departure") }
+    public static var upcoming: String { localized("Upcoming") }
+    public static var timeLeft: String { localized("Time Left") }
+    public static var departingIn: String { localized("Departing in") }
+    public static var leavesIn: String { localized("Leaves in") }
+    public static var returnImmediately: String { localized("Return Immediately") }
+    public static var returnImmediatelyHelp: String { localized("A bus is continuously available. After dropping off passengers at Phase 1, it returns directly to Phase 2 campus for pickup.") }
+    public static var serviceEnded: String { localized("Service ended") }
+    public static var serviceEndedToday: String { localized("Service ended today") }
+    public static var serviceResumesTomorrow: String { localized("Service resumes tomorrow.") }
+    public static var continuousPickupLoopActive: String { localized("Continuous pickup loop is active.") }
+    public static var continuousShuttleShort: String { localized("Leaves right away") }
+    public static var firstTomorrow: String { localized("FIRST TOMORROW") }
+    public static var firstTomorrowLower: String { localized("First tomorrow") }
+    public static var then: String { localized("THEN") }
+    public static var thenLower: String { localized("then") }
+    public static var loop: String { localized("Loop") }
+    public static var loopActive: String { localized("Loop active") }
+    public static var done: String { localized("Done") }
+    public static var noMoreBusesToday: String { localized("No more buses today") }
+    public static var noMoreDeparturesAfterThis: String { localized("No more departures after this") }
+    public static var lastBusToday: String { localized("Last bus today") }
+    public static var unavailable: String { localized("Unavailable") }
+    public static var now: String { localized("Now") }
+    public static var inPrefix: String { localized("in") }
+    public static var untilPrefix: String { localized("Until") }
+    public static var untilLowerPrefix: String { localized("until") }
+    public static var firstTomorrowPrefix: String { localized("First tomorrow") }
+    public static var tmrwPrefix: String { localized("tmrw") }
+    public static var untilUpper: String { localized("UNTIL") }
+    public static var other: String { localized("Other") }
+    public static var last: String { localized("Last") }
+    public static var lastTodayWasPrefix: String { localized("Last today was") }
+    public static var lastUpper: String { localized("LAST") }
+    public static var phaseIToPhaseII: String { localized("Phase I → Phase II") }
+    public static var phaseIIToPhaseI: String { localized("Phase II → Phase I") }
+    public static var compactHourPlus: String { localized("1H+") }
+    public static var shuttleRectangular: String { localized("Shuttle · Rectangular") }
+    public static var shuttleCircular: String { localized("Shuttle · Circular") }
+    public static var shuttleInline: String { localized("Shuttle · Inline") }
+    public static var shuttleCorner: String { localized("Shuttle · Corner") }
+    public static var lockRectangularDescription: String { localized("Lock-screen widget with route, departure time, and countdown.") }
+    public static var lockCircularDescription: String { localized("Compact bus icon and departure time.") }
+    public static var lockInlineDescription: String { localized("Single-line departure summary next to the time.") }
+    public static var watchCircularDescription: String { localized("Bus icon and next departure.") }
+    public static var watchRectangularDescription: String { localized("Route, time, and countdown.") }
+    public static var watchInlineDescription: String { localized("Single-line summary alongside the time.") }
+    public static var watchCornerDescription: String { localized("Corner of the Infograph face.") }
+    public static var remindThisBus: String { localized("Remind this bus") }
+    public static var reminderUnavailable: String { localized("Reminder unavailable") }
+    public static var reminderTooClose: String { localized("This bus is too close to set a reminder.") }
+    public static var reminderSetPrefix: String { localized("Reminder set") }
+    public static var cancelReminder: String { localized("Cancel Reminder") }
+    public static var changeReminder: String { localized("Change Reminder") }
+    public static var notificationsOff: String { localized("Notifications are off") }
+    public static var notificationPermissionMessage: String { localized("Turn on notifications in Settings to get bus reminders.") }
+    public static var notificationSchedulingFailed: String { localized("Could not schedule this reminder.") }
+    public static var openSettings: String { localized("Open Settings") }
+    public static var leavesAt: String { localized("leaves at") }
+    public static var minutesLeft: String { localized("minutes left") }
+    public static var before: String { localized("before") }
 
     public static func resource(_ key: StaticString) -> LocalizedStringResource {
         LocalizedStringResource(
@@ -95,6 +97,13 @@ public enum BusScheduleStrings {
 
     public static func minutes(_ value: Int) -> String {
         "\(value)m"
+    }
+
+    public static func reminderLeadOption(_ value: Int) -> String {
+        String(
+            localized: "\(value) min before",
+            bundle: .module
+        )
     }
 
     public static func serviceStartLoop(_ startTime: String) -> String {
@@ -121,16 +130,26 @@ public enum BusScheduleStrings {
         "\(lastTodayWasPrefix) \(value)"
     }
 
+    public static func last(_ value: String) -> String {
+        "\(last) \(value)"
+    }
+
     public static func other(_ value: String) -> String {
         "\(other) \(value)"
     }
 
     public static func reminderSet(_ value: Int) -> String {
-        "\(reminderSetPrefix) \(minutes(value)) \(before)"
+        String(
+            localized: "Reminder set · \(value)m before",
+            bundle: .module
+        )
     }
 
     public static func reminderNotificationBody(route: String, departureTime: String, leadMinutes: Int) -> String {
-        "\(route) \(leavesAt) \(departureTime). \(leadMinutes) \(minutesLeft)."
+        String(
+            localized: "\(route) leaves at \(departureTime). \(leadMinutes) minutes left.",
+            bundle: .module
+        )
     }
 
     private static func localized(_ key: String) -> String {

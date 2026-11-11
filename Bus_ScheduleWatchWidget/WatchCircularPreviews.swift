@@ -36,3 +36,21 @@ import BusScheduleCore
 } timeline: {
     WatchPreviewFixtures.circularServiceEnded
 }
+
+#if DEBUG
+#Preview("Circular · Countdown boundaries", as: .accessoryCircular) {
+    ShuttleWatchCircular()
+} timeline: {
+    WidgetLayoutPreview.entry(.now)
+    WidgetLayoutPreview.entry(.seconds)
+    WidgetLayoutPreview.entry(.oneMinute)
+    WidgetLayoutPreview.entry(.nineMinutes)
+    WidgetLayoutPreview.entry(.tenMinutes)
+    WidgetLayoutPreview.entry(.fiftyNineMinutes)
+    WidgetLayoutPreview.entry(.oneHour)
+    WidgetLayoutPreview.entry(.hourAndFortyFive)
+    WidgetLayoutPreview.entry(.nineHours)
+    WidgetLayoutPreview.entry(.tenHours)
+    WidgetLayoutPreview.entry(.longest)
+}
+#endif

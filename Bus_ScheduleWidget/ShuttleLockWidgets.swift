@@ -4,8 +4,8 @@
 //
 //  Three lock-screen accessory widgets (iOS 16+):
 //    • accessoryCircular   — bus icon + departure time
-//    • accessoryRectangular — route, time, countdown, one follow-up
-//    • accessoryInline     — single line with route + time + countdown
+//    • accessoryRectangular — route, time, countdown
+//    • accessoryInline     — single line with route + countdown
 //
 
 import WidgetKit

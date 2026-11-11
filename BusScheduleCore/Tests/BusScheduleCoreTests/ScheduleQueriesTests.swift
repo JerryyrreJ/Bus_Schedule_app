@@ -125,8 +125,8 @@ struct ScheduleQueriesTests {
         #expect(refreshComponents.month == 5)
         #expect(refreshComponents.day == 7)
         #expect(refreshComponents.hour == 6)
-        #expect(refreshComponents.minute == 30)
-        #expect(refreshComponents.second == 1)
+        #expect(refreshComponents.minute == 1)
+        #expect(refreshComponents.second == 0)
     }
 
     @Test("Wait progress uses the actual gap between previous and next departures")
@@ -515,6 +515,71 @@ struct ScheduleQueriesTests {
         #expect(components.hour == 0)
         #expect(components.minute == 0)
         #expect(components.second == 0)
+    }
+
+    @Test("ShuttleProvider timeline aligns entries to exact minute boundaries without post-departure lag")
+    func shuttleProviderTimelineAlignsToExactMinutes() throws {
+        let calendar = Calendar.current
+        let start = try localDate(day: 7, hour: 8, minute: 9, second: 37)
+        let timeline = ShuttleProvider.makeTimeline(
+            from: start,
+            primaryRoute: .phIINewCampus
+        ) { _ in
+            (dayType: .weekday, isManualOverride: false)
+        }
+
+        let entries = timeline.entries
+        #expect(entries.count == 241)
+        #expect(entries.first?.date == start)
+
+        // Entry 0 is 08:09:37 -> 08:10 bus is still upcoming (23s left)
+        expectScheduled(
+            entries[0].nextDepartureState(for: .phIINewCampus),
+            time: "08:10",
+            seconds: seconds(8, 10)
+        )
+
+        // Entry 1 must land on the exact 08:10:00 boundary -> immediately advances to 08:20
+        let firstMinuteComponents = calendar.dateComponents([.hour, .minute, .second], from: entries[1].date)
+        #expect(firstMinuteComponents.hour == 8)
+        #expect(firstMinuteComponents.minute == 10)
+        #expect(firstMinuteComponents.second == 0)
+        expectScheduled(
+            entries[1].nextDepartureState(for: .phIINewCampus),
+            time: "08:20",
+            seconds: seconds(8, 20)
+        )
+
+        // Every subsequent entry across the 4-hour window stays aligned to :00 seconds, 60s apart
+        for index in 2..<entries.count {
+            #expect(entries[index].date.timeIntervalSince(entries[index - 1].date) == 60)
+            let second = calendar.component(.second, from: entries[index].date)
+            #expect(second == 0)
+        }
+    }
+
+    @Test("Localized string helpers format values cleanly without raw format specifiers")
+    func localizedStringHelpersFormatCleanly() {
+        let leadOption = BusScheduleStrings.reminderLeadOption(10)
+        #expect(leadOption.contains("10"))
+        #expect(!leadOption.contains("%"))
+
+        let reminderSet = BusScheduleStrings.reminderSet(5)
+        #expect(reminderSet.contains("5"))
+        #expect(!reminderSet.contains("%"))
+
+        let body = BusScheduleStrings.reminderNotificationBody(
+            route: "Phase II → Phase I",
+            departureTime: "08:10",
+            leadMinutes: 10
+        )
+        #expect(body.contains("Phase II → Phase I"))
+        #expect(body.contains("08:10"))
+        #expect(body.contains("10"))
+        #expect(!body.contains("%"))
+
+        #expect(BusScheduleStrings.last("22:10").contains("22:10"))
+        #expect(BusScheduleStrings.other("08:30").contains("08:30"))
     }
 }
 

@@ -3,6 +3,7 @@ import BusScheduleCore
 
 struct LocationToggleView: View {
     @Binding var location: Location
+    var isCompact: Bool = false
 
     private var accentColor: Color {
         location == .phIINewCampus ? .green : .blue
@@ -27,9 +28,10 @@ struct LocationToggleView: View {
                 segmentButton(title: BusScheduleStrings.phaseI, target: .phIParkingLot)
             }
         }
-        .frame(height: 52)
+        .frame(height: isCompact ? 44 : 52)
         .background(glassBackground)
         .clipShape(Capsule())
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .sensoryFeedback(.impact(weight: .medium), trigger: location)
     }
 
@@ -63,8 +65,11 @@ struct LocationToggleView: View {
             }
         } label: {
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: isCompact ? 14 : 15, weight: .semibold))
                 .foregroundColor(location == target ? .white : .secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .padding(.horizontal, 8)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
         }

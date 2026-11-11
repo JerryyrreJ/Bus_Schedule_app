@@ -314,11 +314,6 @@ public extension Schedule {
         let remaining = departureDate.timeIntervalSince(referenceDate)
         guard remaining > 0 else { return nil }
 
-        if remaining >= 3600 {
-            let nextBoundary = departureDate.addingTimeInterval(-3599)
-            return nextBoundary > referenceDate ? nextBoundary : nil
-        }
-
         if remaining > 60 {
             let nextBoundary = departureDate
                 .addingTimeInterval(-TimeInterval((Int(ceil(remaining / 60.0)) - 1) * 60))
@@ -356,6 +351,24 @@ public extension Schedule {
 }
 
 public enum CountdownFormatter {
+    /// Widgets refresh on minute timelines. Round up instead of displaying stale
+    /// seconds or claiming a bus is due before its departure. At most six glyphs
+    /// for a day's wait: 59m, 1h45m, 10h02m. `h` distinguishes a duration from 10:02.
+    public static func widgetString(forSeconds seconds: Int) -> String {
+        if seconds <= 0 { return BusScheduleStrings.now }
+        if seconds < 60 { return "<1m" }
+        let totalMinutes = widgetMinutes(forSeconds: seconds)
+        if totalMinutes < 60 { return "\(totalMinutes)m" }
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        return minutes == 0 ? "\(hours)h" : String(format: "%dh%02dm", hours, minutes)
+    }
+
+    public static func widgetMinutes(forSeconds seconds: Int) -> Int {
+        guard seconds > 0 else { return 0 }
+        return seconds / 60 + (seconds % 60 == 0 ? 0 : 1)
+    }
+
     public static func string(forSeconds seconds: Int) -> String {
         if seconds <= 0 { return BusScheduleStrings.now }
         if seconds < 60 { return "\(seconds)s" }

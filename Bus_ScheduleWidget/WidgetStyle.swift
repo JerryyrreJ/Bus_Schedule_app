@@ -12,20 +12,16 @@ enum WidgetStyle: String, AppEnum {
     case card
     case minimal
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation {
-        TypeDisplayRepresentation(name: "Widget Style")
-    }
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Widget Style"
 
-    static var caseDisplayRepresentations: [WidgetStyle: DisplayRepresentation] {
-        [
-            .card: DisplayRepresentation(
-                title: "Card",
-                subtitle: "Nested rounded cards"
-            ),
-            .minimal: DisplayRepresentation(
-                title: "Minimal",
-                subtitle: "Whitespace + hairlines"
-            )
-        ]
-    }
+    static let caseDisplayRepresentations: [WidgetStyle: DisplayRepresentation] = [
+        .card: DisplayRepresentation(
+            title: "Card",
+            subtitle: "Nested rounded cards"
+        ),
+        .minimal: DisplayRepresentation(
+            title: "Minimal",
+            subtitle: "Whitespace + hairlines"
+        )
+    ]
 }

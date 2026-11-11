@@ -6,13 +6,14 @@ struct BusReminderButton: View {
     let location: Location
     let dayType: DayType
     @ObservedObject var scheduler: LocalBusReminderScheduler
+    var isCompact: Bool = false
 
     @Environment(\.openURL) private var openURL
     @State private var isDialogPresented = false
     @State private var alert: ReminderAlert?
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 15)) { context in
+        TimelineView(.periodic(from: .now, by: 1)) { context in
             let choices = Schedule.reminderChoices(
                 for: location,
                 dayType: dayType,
@@ -26,66 +27,70 @@ struct BusReminderButton: View {
                 departureDate: departureDate,
                 referenceDate: context.date
             )
+            let isReminderActive = activeReminder != nil
+            let canInteract = hasScheduledBus && (hasAvailableChoice || isReminderActive)
 
-            Button {
-                isDialogPresented = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: activeReminder == nil ? "bell" : "bell.badge.fill")
-                        .font(.system(size: 15, weight: .semibold))
+            if hasScheduledBus {
+                Button {
+                    isDialogPresented = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: isReminderActive ? "bell.badge.fill" : "bell")
+                            .font(.system(size: isCompact ? 14 : 15, weight: .semibold))
 
-                    Text(labelText(activeReminder: activeReminder, hasScheduledBus: hasScheduledBus))
-                        .font(.system(size: 14, weight: .semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                }
-                .foregroundColor(hasScheduledBus ? .primary : .secondary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(buttonBackground)
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .disabled(!hasScheduledBus)
-            .confirmationDialog(
-                activeReminder == nil ? BusScheduleStrings.remindThisBus : BusScheduleStrings.changeReminder,
-                isPresented: $isDialogPresented,
-                titleVisibility: .visible
-            ) {
-                ForEach(choices, id: \.leadMinutes) { choice in
-                    Button(BusScheduleStrings.minutes(choice.leadMinutes)) {
-                        schedule(choice)
+                        Text(labelText(activeReminder: activeReminder, hasScheduledBus: hasScheduledBus))
+                            .font(.system(size: isCompact ? 13.5 : 14, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
-                    .disabled(!choice.isAvailable)
+                    .foregroundColor(canInteract ? .primary : .secondary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, isCompact ? 8 : 10)
+                    .background(buttonBackground)
+                    .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
+                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                .confirmationDialog(
+                    activeReminder == nil ? BusScheduleStrings.remindThisBus : BusScheduleStrings.changeReminder,
+                    isPresented: $isDialogPresented,
+                    titleVisibility: .visible
+                ) {
+                    ForEach(choices, id: \.leadMinutes) { choice in
+                        Button(BusScheduleStrings.reminderLeadOption(choice.leadMinutes)) {
+                            schedule(choice)
+                        }
+                        .disabled(!choice.isAvailable)
+                    }
 
-                if activeReminder != nil {
-                    Button(BusScheduleStrings.cancelReminder, role: .destructive) {
-                        scheduler.cancelActiveReminder()
+                    if activeReminder != nil {
+                        Button(BusScheduleStrings.cancelReminder, role: .destructive) {
+                            scheduler.cancelActiveReminder()
+                        }
+                    }
+                } message: {
+                    if hasScheduledBus && !hasAvailableChoice {
+                        Text(BusScheduleStrings.reminderTooClose)
                     }
                 }
-            } message: {
-                if hasScheduledBus && !hasAvailableChoice {
-                    Text(BusScheduleStrings.reminderTooClose)
-                }
-            }
-            .alert(item: $alert) { alert in
-                switch alert {
-                case .notificationsDenied:
-                    return Alert(
-                        title: Text(BusScheduleStrings.notificationsOff),
-                        message: Text(BusScheduleStrings.notificationPermissionMessage),
-                        primaryButton: .default(Text(BusScheduleStrings.openSettings)) {
-                            openSettings()
-                        },
-                        secondaryButton: .cancel()
-                    )
-                case let .schedulingFailed(message):
-                    return Alert(
-                        title: Text(BusScheduleStrings.notificationSchedulingFailed),
-                        message: Text(message),
-                        dismissButton: .default(Text(BusScheduleStrings.done))
-                    )
+                .alert(item: $alert) { alert in
+                    switch alert {
+                    case .notificationsDenied:
+                        return Alert(
+                            title: Text(BusScheduleStrings.notificationsOff),
+                            message: Text(BusScheduleStrings.notificationPermissionMessage),
+                            primaryButton: .default(Text(BusScheduleStrings.openSettings)) {
+                                openSettings()
+                            },
+                            secondaryButton: .cancel()
+                        )
+                    case let .schedulingFailed(message):
+                        return Alert(
+                            title: Text(BusScheduleStrings.notificationSchedulingFailed),
+                            message: Text(message),
+                            dismissButton: .default(Text(BusScheduleStrings.done))
+                        )
+                    }
                 }
             }
         }

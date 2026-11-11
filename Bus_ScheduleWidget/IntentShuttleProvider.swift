@@ -24,7 +24,7 @@ struct IntentShuttleProvider: AppIntentTimelineProvider {
 
     func placeholder(in context: Context) -> StyledShuttleEntry {
         StyledShuttleEntry(
-            base: ShuttleProvider.snapshot(at: Date()),
+            base: ShuttleProvider.placeholderEntry(),
             style: .card
         )
     }

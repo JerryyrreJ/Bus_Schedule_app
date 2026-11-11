@@ -8,13 +8,11 @@
 //
 
 import AppIntents
-import BusScheduleCore
 import WidgetKit
 
 struct ShuttleHomeIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Campus Shuttle"
-
-    static var description = IntentDescription("Choose how the widget is rendered.")
+    static let title: LocalizedStringResource = "Campus Shuttle"
+    static let description = IntentDescription("Choose how the widget is rendered.")
 
     @Parameter(title: "Style", default: .card)
     var style: WidgetStyle

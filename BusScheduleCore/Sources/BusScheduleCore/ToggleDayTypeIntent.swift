@@ -11,23 +11,24 @@ import AppIntents
 import WidgetKit
 
 public struct ToggleDayTypeIntent: AppIntent {
-    public static var title: LocalizedStringResource { "Cycle Schedule Override" }
+    public static let title: LocalizedStringResource = "Cycle Schedule Override"
 
-    public static var description: IntentDescription? {
+    public static let description = IntentDescription(
         "Cycle the schedule override between Auto, Weekday, Saturday, and Holiday."
-    }
+    )
 
-    public static var isDiscoverable: Bool { false }
+    public static let isDiscoverable: Bool = false
 
     public init() {}
 
+    @MainActor
     public func perform() async throws -> some IntentResult {
         let now = Date()
         let auto = DayType.automatic(for: now)
-        let current = SharedStore.readOverride()
+        let current = SharedStore.readOverride(for: now)
         let next = DayType.nextOverrideInCycle(from: current, currentAuto: auto)
 
-        SharedStore.writeOverride(next)
+        SharedStore.writeOverride(next, sourceDate: now)
         WidgetCenter.shared.reloadAllTimelines()
 
         return .result()

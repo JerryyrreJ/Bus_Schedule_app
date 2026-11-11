@@ -17,22 +17,24 @@ struct OverrideChip: View {
 
     var body: some View {
         Button(intent: ToggleDayTypeIntent()) {
-            HStack(spacing: 5) {
+            HStack(spacing: 4) {
                 Text(prefix)
-                    .font(.system(size: 9, weight: .heavy))
-                    .tracking(0.6)
+                    .font(.system(size: 8.5, weight: .heavy))
+                    .tracking(0.5)
                     .textCase(.uppercase)
                     .opacity(0.65)
                 Text("· \(label)")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 10.5, weight: .semibold))
                 if isManualOverride {
                     Image(systemName: "arrow.uturn.backward")
                         .font(.system(size: 8, weight: .bold))
                         .opacity(0.7)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, isManualOverride ? 7 : 2)
+            .padding(.vertical, 2.5)
             .background(
                 Capsule().fill(isManualOverride ? Color.accentColor.opacity(0.18) : Color.clear)
             )

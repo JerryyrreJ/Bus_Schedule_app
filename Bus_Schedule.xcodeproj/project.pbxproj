@@ -366,6 +366,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 3F735EC72CE1BE3700C1BB86;
 			minimizedProjectReferenceProxies = 1;
@@ -672,7 +673,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Bus_ScheduleWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -704,7 +705,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Bus_ScheduleWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -806,7 +807,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Bus_ScheduleWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatchWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -839,7 +840,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Bus_ScheduleWatchWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Bus_ScheduleWatchWidget;
+				INFOPLIST_KEY_CFBundleDisplayName = "BNBU Bus";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

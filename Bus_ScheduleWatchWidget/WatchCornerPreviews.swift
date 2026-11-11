@@ -32,3 +32,21 @@ import BusScheduleCore
     WatchPreviewFixtures.cornerServiceEnded
 }
 #endif
+
+#if DEBUG && os(watchOS)
+#Preview("Corner · Countdown boundaries", as: .accessoryCorner) {
+    ShuttleWatchCorner()
+} timeline: {
+    WidgetLayoutPreview.entry(.now)
+    WidgetLayoutPreview.entry(.seconds)
+    WidgetLayoutPreview.entry(.oneMinute)
+    WidgetLayoutPreview.entry(.nineMinutes)
+    WidgetLayoutPreview.entry(.tenMinutes)
+    WidgetLayoutPreview.entry(.fiftyNineMinutes)
+    WidgetLayoutPreview.entry(.oneHour)
+    WidgetLayoutPreview.entry(.hourAndFortyFive)
+    WidgetLayoutPreview.entry(.nineHours)
+    WidgetLayoutPreview.entry(.tenHours)
+    WidgetLayoutPreview.entry(.longest)
+}
+#endif

@@ -47,7 +47,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F8824182FA9F6A40070C89C"
             BuildableName = "Bus_ScheduleWatch Watch App.app"
-            BlueprintName = "Bus_ScheduleWatch Watch App"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -64,7 +63,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F8824182FA9F6A40070C89C"
             BuildableName = "Bus_ScheduleWatch Watch App.app"
-            BlueprintName = "Bus_ScheduleWatch Watch App"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

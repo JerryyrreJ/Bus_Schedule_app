@@ -321,8 +321,12 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         super.init()
     }
 
+    private var isAppExtension: Bool {
+        Bundle.main.bundleURL.pathExtension == "appex"
+    }
+
     func start() {
-        guard WCSession.isSupported() else { return }
+        guard !isAppExtension, WCSession.isSupported() else { return }
         lock.lock()
         let alreadyStarted = didStart
         if !alreadyStarted {
@@ -349,8 +353,9 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
     }
 
     func publishLocalPreferences() {
-        guard WCSession.isSupported() else { return }
+        guard !isAppExtension, WCSession.isSupported() else { return }
         ensureStartedForSend()
+        guard session.activationState == .activated else { return }
 
         let payload: [String: Any] = [
             overridePayloadKey: SharedStore.localOverrideValue(),
@@ -396,6 +401,7 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         error: (any Error)?
     ) {
         print("[BusSchedule.WCSync] activated state=\(activationState.rawValue) error=\(String(describing: error))")
+        guard activationState == .activated else { return }
         // Pull anything the counterpart pushed before we were ready, then push
         // our own local state. Doing the publish here (rather than at the end
         // of start()) is what guarantees our value actually reaches the other
@@ -494,17 +500,17 @@ final class WatchPreferenceSync: NSObject, WCSessionDelegate, @unchecked Sendabl
         print("[BusSchedule.WCSync] received route=\(routeValue ?? "nil")@\(routeUpdatedAt)#\(routeSourceDeviceID) override=\(overrideValue ?? "nil")@\(overrideUpdatedAt)#\(overrideSourceDeviceID) exp=\(overrideExpiresAt)")
 
         DispatchQueue.main.async {
-            overrideValue.map {
-                SharedStore.applyIncomingOverrideValue(
-                    $0,
+            if let overrideValue {
+                _ = SharedStore.applyIncomingOverrideValue(
+                    overrideValue,
                     updatedAt: overrideUpdatedAt,
                     sourceDeviceID: overrideSourceDeviceID,
                     expiresAt: overrideExpiresAt
                 )
             }
-            routeValue.map {
-                SharedStore.applyIncomingPrimaryRouteValue(
-                    $0,
+            if let routeValue {
+                _ = SharedStore.applyIncomingPrimaryRouteValue(
+                    routeValue,
                     updatedAt: routeUpdatedAt,
                     sourceDeviceID: routeSourceDeviceID
                 )

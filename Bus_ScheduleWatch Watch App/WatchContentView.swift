@@ -11,169 +11,250 @@
 //  app or widget chip, then WatchConnectivity syncs the latest state over.
 //
 
+import Combine
 import SwiftUI
 import BusScheduleCore
 
 struct WatchContentView: View {
     @State private var primaryRoute: Location = SharedStore.readPrimaryRoute()
+    @State private var refreshToken: Int = 0
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 30)) { context in
-            content(at: context.date)
+        TimelineView(.periodic(from: .now, by: isLuminanceReduced ? 60 : 1)) { context in
+            let resolved = DayType.effective(for: context.date)
+            renderedContent(
+                at: context.date,
+                route: primaryRoute,
+                resolvedDayType: resolved.dayType,
+                isManualOverride: resolved.isManualOverride,
+                luminanceReduced: isLuminanceReduced
+            )
+            .id(refreshToken)
         }
         .containerBackground(.fill.tertiary, for: .navigation)
         .onAppear {
+            SharedStore.startWatchSync()
             applyRoutePreference()
             applyEffectiveDayType()
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
+            SharedStore.startWatchSync()
             applyRoutePreference()
             applyEffectiveDayType()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .primaryRouteDidChange)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
+            applyEffectiveDayType()
+            refreshToken &+= 1
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .primaryRouteDidChange).receive(on: RunLoop.main)) { _ in
             applyRoutePreference()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .dayTypeOverrideDidChange).receive(on: RunLoop.main)) { _ in
             applyEffectiveDayType()
+            refreshToken &+= 1
         }
     }
 
     @ViewBuilder
-    private func content(at date: Date) -> some View {
-        let resolvedDayType = DayType.effective(for: date).dayType
+    private func renderedContent(
+        at date: Date,
+        route: Location,
+        resolvedDayType: DayType,
+        isManualOverride: Bool,
+        luminanceReduced: Bool
+    ) -> some View {
         let currentSeconds = Schedule.secondsFromMidnight(for: date)
         let state = Schedule.nextDepartureState(
-            for: primaryRoute,
+            for: route,
             dayType: resolvedDayType,
             currentSecondsFromMidnight: currentSeconds
         )
 
-        VStack(alignment: .leading, spacing: 0) {
-            routeHeader
+        GeometryReader { geo in
+            let isCompact = geo.size.height < 165
 
-            // Top spacer — together with the bottom Spacer inside each block,
-            // forms a two-spring layout that adapts to any watch size.
-            // 41mm: both shrink to minLength. 49mm Ultra: both grow.
-            // No font/padding tweaking needed across devices.
-            Spacer(minLength: 4)
+            VStack(alignment: .leading, spacing: 0) {
+                routeHeader(for: route)
 
-            switch state {
-            case let .scheduled(time, departureSeconds):
-                scheduledBlock(
-                    time: time,
-                    departureSeconds: departureSeconds,
-                    currentSeconds: currentSeconds,
-                    dayType: resolvedDayType
-                )
-            case .returnImmediately:
-                returnImmediatelyBlock(currentSeconds: currentSeconds, dayType: resolvedDayType)
-            case .noMoreBuses:
-                noMoreBusesBlock(date: date)
+                Spacer(minLength: 2)
+
+                switch state {
+                case let .scheduled(time, departureSeconds):
+                    scheduledBlock(
+                        route: route,
+                        time: time,
+                        departureSeconds: departureSeconds,
+                        currentSeconds: currentSeconds,
+                        dayType: resolvedDayType,
+                        luminanceReduced: luminanceReduced,
+                        isCompact: isCompact
+                    )
+                case .returnImmediately:
+                    returnImmediatelyBlock(
+                        currentSeconds: currentSeconds,
+                        dayType: resolvedDayType,
+                        isCompact: isCompact
+                    )
+                case .noMoreBuses:
+                    noMoreBusesBlock(
+                        date: date,
+                        route: route,
+                        resolvedDayType: resolvedDayType,
+                        isManualOverride: isManualOverride,
+                        isCompact: isCompact
+                    )
+                }
             }
+            .padding(.horizontal, 2)
+            .padding(.bottom, isCompact ? 4 : 6)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private var routeHeader: some View {
+    private func routeHeader(for route: Location) -> some View {
         Button(action: swap) {
-            HStack(spacing: 7) {
-                // Semantic fonts (.headline / .subheadline) — auto-scale across
-                // 41mm → 49mm Ultra and follow Dynamic Type. No hard-coded pt.
+            HStack(spacing: 6) {
                 Image(systemName: WidgetTheme.busSymbol)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                Text(WidgetTheme.routeLabel(for: primaryRoute))
-                    .font(.headline)
-                    .fontDesign(.rounded)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Spacer(minLength: 4)
-                // Swap affordance — bigger circular bg + clearer icon.
-                // The whole row is the hit target (contentShape below).
-                Image(systemName: "arrow.left.arrow.right")
                     .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                ViewThatFits(in: .horizontal) {
+                    Text(WidgetTheme.routeLabel(for: route))
+                        .font(.subheadline.weight(.semibold))
+                        .fontDesign(.rounded)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+
+                    Text(WidgetTheme.compactRouteLabel(for: route))
+                        .font(.subheadline.weight(.semibold))
+                        .fontDesign(.rounded)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.primary.opacity(0.85))
-                    .frame(width: 30, height: 30)
+                    .frame(width: 28, height: 28)
                     .background(Color.white.opacity(0.10), in: Circle())
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
+            .dynamicTypeSize(...DynamicTypeSize.large)
             // Force the entire frame to be hit-testable — without this,
-            // taps on the Spacer's empty space fall through.
+            // taps on empty space fall through.
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(WidgetTheme.routeLabel(for: route))
     }
 
     @ViewBuilder
     private func scheduledBlock(
+        route: Location,
         time: String,
         departureSeconds: Int,
         currentSeconds: Int,
-        dayType: DayType
+        dayType: DayType,
+        luminanceReduced: Bool,
+        isCompact: Bool
     ) -> some View {
         let remaining = Schedule.secondsRemaining(until: departureSeconds, from: currentSeconds)
         let urgency = WidgetUrgency.from(secondsRemaining: remaining)
         let upcoming = Schedule.upcomingDepartures(
-            for: primaryRoute,
+            for: route,
             dayType: dayType,
             currentSecondsFromMidnight: currentSeconds,
             limit: 2
         )
         let progress = waitProgress(
+            route: route,
             currentSeconds: currentSeconds,
             departureSeconds: departureSeconds,
             dayType: dayType
         )
-        let barColor = WidgetTheme.countdownColor(for: urgency, location: primaryRoute)
+        let barColor = WidgetTheme.countdownColor(for: urgency, location: route)
+        let countdownText = luminanceReduced
+            ? CountdownFormatter.widgetString(forSeconds: remaining)
+            : CountdownFormatter.string(forSeconds: remaining)
+        let fullCaption = urgency == .critical ? BusScheduleStrings.departingIn : BusScheduleStrings.leavesIn
 
-        // Hero: big departure time — fills the full width.
+        // Hero: big departure time — fills width and scales gracefully on 40mm watches.
         Text(time)
-            .font(.system(size: 64, weight: WidgetTheme.bigTimeWeight(for: urgency), design: .rounded))
+            .font(.system(
+                size: isCompact ? 48 : 56,
+                weight: WidgetTheme.bigTimeWeight(for: urgency),
+                design: .rounded
+            ))
             .monospacedDigit()
             .kerning(-2)
             .foregroundStyle(urgency == .critical ? Color.red : Color.primary)
             .lineLimit(1)
-            .minimumScaleFactor(0.5)
+            .minimumScaleFactor(0.55)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 6)
+            .padding(.top, isCompact ? 1 : 2)
 
         // Hairline progress bar — fills as the next bus approaches.
-        // Animated for smooth visual update on TimelineView ticks.
         progressBar(progress: progress, color: barColor)
-            .padding(.top, 4)
-            .padding(.bottom, 2)
+            .padding(.vertical, isCompact ? 2.5 : 3.5)
 
-        // Countdown — second focal point, baseline-aligned for tight visual.
-        // Semantic fonts so it scales with watch size + Dynamic Type.
-        HStack(alignment: .firstTextBaseline, spacing: 5) {
-            Text(urgency == .critical ? BusScheduleStrings.departingIn : BusScheduleStrings.leavesIn)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            Text(CountdownFormatter.string(forSeconds: remaining))
-                .font(.title3.weight(.heavy).monospacedDigit())
-                .fontDesign(.rounded)
-                .foregroundStyle(barColor)
+        // Countdown — steps down caption before ever wrapping or truncating digits.
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(fullCaption)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                countdownValueLabel(countdownText, color: barColor, isCompact: isCompact)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(BusScheduleStrings.inPrefix)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                countdownValueLabel(countdownText, color: barColor, isCompact: isCompact)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+
+            countdownValueLabel(countdownText, color: barColor, isCompact: isCompact)
+                .minimumScaleFactor(0.7)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dynamicTypeSize(...DynamicTypeSize.large)
+        .layoutPriority(1)
 
         // Push the chips to the bottom of the screen.
-        Spacer(minLength: 6)
+        Spacer(minLength: 4)
 
         if !upcoming.isEmpty {
             upcomingChips(times: upcoming)
+                .layoutPriority(1)
         }
+    }
+
+    private func countdownValueLabel(_ text: String, color: Color, isCompact: Bool) -> some View {
+        Text(text)
+            .font(.system(size: isCompact ? 17 : 18.5, weight: .heavy, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(color)
+            .lineLimit(1)
     }
 
     /// Fraction in [0, 1] describing how far we are between the previous
     /// departure and the next one. If there is no previous departure today
     /// (we're before the first bus), falls back to a 30-minute imminence
     /// scale so the bar still has meaning.
-    private func waitProgress(currentSeconds: Int, departureSeconds: Int, dayType: DayType) -> Double {
+    private func waitProgress(route: Location, currentSeconds: Int, departureSeconds: Int, dayType: DayType) -> Double {
         if let prev = Schedule.previousDepartureSeconds(
-            for: primaryRoute,
+            for: route,
             dayType: dayType,
             currentSecondsFromMidnight: currentSeconds
         ), departureSeconds > prev {
@@ -194,7 +275,7 @@ struct WatchContentView: View {
                     .fill(Color.white.opacity(0.08))
                 Capsule()
                     .fill(color)
-                    .frame(width: max(2, geo.size.width * CGFloat(progress)))
+                    .frame(width: min(geo.size.width, max(progress > 0 ? 3 : 0, geo.size.width * CGFloat(progress))))
                     .animation(.easeOut(duration: 0.6), value: progress)
             }
         }
@@ -203,44 +284,67 @@ struct WatchContentView: View {
 
     @ViewBuilder
     private func upcomingChips(times: [String]) -> some View {
-        HStack(spacing: 5) {
-            Text(BusScheduleStrings.then)
-                .font(.caption2.weight(.heavy))
-                .tracking(1.2)
-                .foregroundStyle(.tertiary)
-                .padding(.trailing, 1)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 5) {
+                Text(BusScheduleStrings.then)
+                    .font(.caption2.weight(.heavy))
+                    .tracking(1.0)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
 
-            ForEach(times, id: \.self) { time in
-                Text(time)
-                    .font(.footnote.weight(.semibold).monospacedDigit())
-                    .fontDesign(.rounded)
-                    .foregroundStyle(.primary.opacity(0.85))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.white.opacity(0.10), in: Capsule())
+                upcomingCapsules(times: times)
             }
+            .fixedSize(horizontal: true, vertical: false)
 
-            Spacer(minLength: 0)
+            HStack(spacing: 5) {
+                upcomingCapsules(times: times)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+
+            Text(times.joined(separator: " · "))
+                .font(.footnote.weight(.semibold).monospacedDigit())
+                .fontDesign(.rounded)
+                .foregroundStyle(.primary.opacity(0.85))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dynamicTypeSize(...DynamicTypeSize.large)
+    }
+
+    @ViewBuilder
+    private func upcomingCapsules(times: [String]) -> some View {
+        ForEach(times, id: \.self) { time in
+            Text(time)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(.primary.opacity(0.85))
+                .lineLimit(1)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2.5)
+                .background(Color.white.opacity(0.10), in: Capsule())
         }
     }
 
     @ViewBuilder
-    private func returnImmediatelyBlock(currentSeconds: Int, dayType: DayType) -> some View {
-        Text(BusScheduleStrings.returnImmediatelyMultiline())
-            .font(.system(size: 26, weight: .semibold, design: .rounded))
-            .foregroundStyle(.green)
-            .lineLimit(2)
-            .minimumScaleFactor(0.6)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
+    private func returnImmediatelyBlock(currentSeconds: Int, dayType: DayType, isCompact: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(BusScheduleStrings.loopActive)
+                .font(.system(size: isCompact ? 22 : 25, weight: .bold, design: .rounded))
+                .foregroundStyle(.green)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-        Text(BusScheduleStrings.continuousPickupLoopActive)
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-            .padding(.top, 4)
+            Text(BusScheduleStrings.continuousShuttleShort)
+                .font(.system(size: isCompact ? 12 : 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.78)
+        }
+        .padding(.top, isCompact ? 6 : 8)
 
-        Spacer(minLength: 6)
+        Spacer(minLength: 4)
 
         if let deadline = Schedule.returnImmediatelyDeadline(
             dayType: dayType,
@@ -248,56 +352,76 @@ struct WatchContentView: View {
         ) {
             Divider()
                 .opacity(0.25)
-                .padding(.bottom, 5)
+                .padding(.bottom, 4)
 
             HStack(spacing: 6) {
                 Text(BusScheduleStrings.untilUpper)
                     .font(.system(size: 10, weight: .heavy))
                     .tracking(1.2)
                     .foregroundStyle(.tertiary)
+                    .lineLimit(1)
                 Text(deadline)
-                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .font(.system(size: 14.5, weight: .heavy, design: .rounded))
                     .foregroundStyle(.green)
                     .monospacedDigit()
+                    .lineLimit(1)
                 Spacer(minLength: 0)
             }
+            .minimumScaleFactor(0.8)
         }
     }
 
     @ViewBuilder
-    private func noMoreBusesBlock(date: Date) -> some View {
-        let resolved = DayType.effective(for: date)
+    private func noMoreBusesBlock(
+        date: Date,
+        route: Location,
+        resolvedDayType: DayType,
+        isManualOverride: Bool,
+        isCompact: Bool
+    ) -> some View {
         let nextDay = Schedule.nextServiceDay(
             after: date,
-            currentDayType: resolved.dayType,
-            isManualOverride: resolved.isManualOverride
+            currentDayType: resolvedDayType,
+            isManualOverride: isManualOverride
         )
-        let serviceStart = Schedule.firstServiceStart(for: primaryRoute, dayType: nextDay.dayType)
+        let serviceStart = Schedule.firstServiceStart(for: route, dayType: nextDay.dayType)
 
         Text(BusScheduleStrings.serviceEnded)
-            .font(.system(size: 18, weight: .semibold, design: .rounded))
+            .font(.system(size: isCompact ? 18 : 20, weight: .semibold, design: .rounded))
             .foregroundStyle(.primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
+            .padding(.top, isCompact ? 6 : 8)
 
-        Spacer(minLength: 6)
+        Spacer(minLength: 4)
 
         if let serviceStart {
             Divider()
                 .opacity(0.25)
-                .padding(.bottom, 5)
+                .padding(.bottom, 4)
 
-            Text(BusScheduleStrings.firstTomorrow)
-                .font(.system(size: 10, weight: .heavy))
-                .tracking(1.2)
-                .foregroundStyle(.tertiary)
+            HStack(spacing: 4) {
+                Text(BusScheduleStrings.firstTomorrow)
+                    .font(.system(size: 10, weight: .heavy))
+                    .tracking(1.0)
+                    .foregroundStyle(.tertiary)
+                if case .returnImmediately = serviceStart {
+                    Text("· \(BusScheduleStrings.loop)")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.green)
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+
             Text(serviceStart.compactDisplayText)
-                .font(.system(size: 40, weight: .ultraLight, design: .rounded))
+                .font(.system(size: isCompact ? 34 : 38, weight: .light, design: .rounded))
                 .monospacedDigit()
-                .kerning(-1.5)
+                .kerning(-1.2)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.65)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

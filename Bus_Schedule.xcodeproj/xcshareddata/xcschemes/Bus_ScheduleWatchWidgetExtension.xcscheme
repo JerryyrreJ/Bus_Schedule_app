@@ -78,7 +78,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F8824302FA9F74A0070C89C"
             BuildableName = "Bus_ScheduleWatchWidgetExtension.appex"
-            BlueprintName = "Bus_ScheduleWatchWidgetExtension"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -121,7 +120,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3F8824302FA9F74A0070C89C"
             BuildableName = "Bus_ScheduleWatchWidgetExtension.appex"
-            BlueprintName = "Bus_ScheduleWatchWidgetExtension"
             ReferencedContainer = "container:Bus_Schedule.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
