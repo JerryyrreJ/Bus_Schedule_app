@@ -16,8 +16,8 @@ enum WidgetStyle: String, AppEnum {
 
     static let caseDisplayRepresentations: [WidgetStyle: DisplayRepresentation] = [
         .card: DisplayRepresentation(
-            title: "Card",
-            subtitle: "Nested rounded cards"
+            title: "Board",
+            subtitle: "Color-coded departure board"
         ),
         .minimal: DisplayRepresentation(
             title: "Minimal",

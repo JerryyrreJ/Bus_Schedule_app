@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Board" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "站牌"
+          }
+        }
+      }
+    },
     "Campus Shuttle" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11,12 +21,12 @@
         }
       }
     },
-    "Card" : {
+    "Color-coded departure board" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "卡片"
+            "value" : "色标双栏时刻表"
           }
         }
       }
@@ -37,16 +47,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "极简"
-          }
-        }
-      }
-    },
-    "Nested rounded cards" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分层圆角卡片"
           }
         }
       }

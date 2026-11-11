@@ -4,7 +4,7 @@
 //
 //  Home-screen widget configuration covering both Small and Medium sizes.
 //  Backed by AppIntentConfiguration so users can pick a visual style
-//  (card or minimal) per widget instance.
+//  (board or minimal) per widget instance.
 //
 
 import WidgetKit
@@ -107,7 +107,7 @@ private func previewEntry(
     )
 }
 
-#Preview("Medium · Card · Afternoon", as: .systemMedium) {
+#Preview("Medium · Board · Afternoon", as: .systemMedium) {
     ShuttleHomeWidget()
 } timeline: {
     previewEntry(
@@ -119,7 +119,7 @@ private func previewEntry(
     )
 }
 
-#Preview("Medium · Card · Service Ended", as: .systemMedium) {
+#Preview("Medium · Board · Service Ended", as: .systemMedium) {
     ShuttleHomeWidget()
 } timeline: {
     previewEntry(

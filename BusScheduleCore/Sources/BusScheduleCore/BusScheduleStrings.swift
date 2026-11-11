@@ -43,6 +43,7 @@ public enum BusScheduleStrings {
     public static var thenLower: String { localized("then") }
     public static var loop: String { localized("Loop") }
     public static var loopActive: String { localized("Loop active") }
+    public static var loopUntil: String { localized("Loop until") }
     public static var done: String { localized("Done") }
     public static var noMoreBusesToday: String { localized("No more buses today") }
     public static var noMoreDeparturesAfterThis: String { localized("No more departures after this") }

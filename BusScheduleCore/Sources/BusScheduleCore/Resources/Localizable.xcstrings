@@ -113,18 +113,34 @@
         }
       }
     },
-    "Card": {
+    "Board": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Card"
+            "value": "Board"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "卡片"
+            "value": "站牌"
+          }
+        }
+      }
+    },
+    "Color-coded departure board": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color-coded departure board"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "色标双栏时刻表"
           }
         }
       }
@@ -413,6 +429,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "循环中"
+          }
+        }
+      }
+    },
+    "Loop until": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loop until"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "循环截止"
           }
         }
       }

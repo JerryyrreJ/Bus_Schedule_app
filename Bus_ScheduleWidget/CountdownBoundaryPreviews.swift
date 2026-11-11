@@ -19,7 +19,7 @@ import BusScheduleCore
     StyledShuttleEntry(base: WidgetLayoutPreview.entry(.longest), style: .card)
 }
 
-#Preview("Medium Card · Countdown boundaries", as: .systemMedium) {
+#Preview("Medium Board · Countdown boundaries", as: .systemMedium) {
     ShuttleHomeWidget()
 } timeline: {
     StyledShuttleEntry(base: WidgetLayoutPreview.entry(.now), style: .card)

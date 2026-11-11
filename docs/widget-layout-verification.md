@@ -7,7 +7,7 @@ The app's detailed second formatter is unchanged.
 
 - Home widgets retain a large departure time. The caption yields to the countdown
   when space is tight. Small-widget follow-up times stay on one line; their
-  redundant caption can disappear. Medium secondary cards show departure times
+  redundant caption can disappear. Medium board rows show departure times
   without a second competing countdown.
 - Rectangular lock widgets show route, departure time, then a compact countdown.
 - Inline widgets show route and countdown; they omit the redundant clock time.
