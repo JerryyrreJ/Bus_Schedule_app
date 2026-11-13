@@ -6,6 +6,10 @@ struct NextBusView: View {
     let dayType: DayType
     var isManualOverride: Bool = false
     var isCompact: Bool = false
+    var heroFontSize: CGFloat? = nil
+    var sectionSpacing: CGFloat? = nil
+    var showsUpcoming: Bool = true
+    var referenceDateOverride: Date? = nil
 
     @State private var showTooltip: Bool = false
 
@@ -13,20 +17,38 @@ struct NextBusView: View {
         location == .phIINewCampus ? .green : .blue
     }
 
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            let state = displayState(referenceDate: context.date)
+    private var resolvedHeroFontSize: CGFloat {
+        heroFontSize ?? (isCompact ? 68 : 88)
+    }
 
-            VStack(spacing: isCompact ? 18 : 32) {
-                heroBlock(state: state)
-                if !state.isReturnImmediately && !state.isNoMoreBuses {
-                    countdownBlock(state: state)
+    private var resolvedSectionSpacing: CGFloat {
+        sectionSpacing ?? (isCompact ? 18 : 32)
+    }
+
+    var body: some View {
+        if let referenceDateOverride {
+            content(for: referenceDateOverride)
+        } else {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                content(for: context.date)
+            }
+        }
+    }
+
+    private func content(for date: Date) -> some View {
+        let state = displayState(referenceDate: date)
+
+        return VStack(spacing: resolvedSectionSpacing) {
+            heroBlock(state: state)
+            if !state.isReturnImmediately && !state.isNoMoreBuses {
+                countdownBlock(state: state)
+                if showsUpcoming {
                     upcomingBlock(state: state)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
+        .frame(maxWidth: .infinity)
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
     // MARK: - Hero
@@ -47,7 +69,7 @@ struct NextBusView: View {
                     .minimumScaleFactor(0.8)
 
                 Text(state.nextDeparture)
-                    .font(.system(size: isCompact ? 68 : 88, weight: .ultraLight, design: .rounded))
+                    .font(.system(size: resolvedHeroFontSize, weight: .ultraLight, design: .rounded))
                     .monospacedDigit()
                     .kerning(-2)
                     .foregroundColor(.primary)

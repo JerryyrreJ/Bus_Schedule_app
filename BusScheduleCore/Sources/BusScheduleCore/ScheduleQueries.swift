@@ -66,6 +66,27 @@ public enum ServiceStart: Sendable, Equatable {
     }
 }
 
+public enum TimetableRowStatus: Sendable, Equatable {
+    case past
+    case activeLoop
+    case nextPrimary
+    case upcoming
+}
+
+public struct TimetableRow: Identifiable, Sendable, Equatable {
+    public let id: Int
+    public let phIITime: String?
+    public let phITime: String?
+    public let isPhIReturnImmediately: Bool
+    public let isPhIIPast: Bool
+    public let isPhIPast: Bool
+    public let status: TimetableRowStatus
+
+    public var isHighlighted: Bool {
+        status == .activeLoop || status == .nextPrimary
+    }
+}
+
 public extension Schedule {
 
     static func firstDeparture(for location: Location, dayType: DayType) -> String? {
@@ -347,6 +368,129 @@ public extension Schedule {
             lastSeen = s
         }
         return lastSeen
+    }
+
+    /// Builds paired Phase II ↔ Phase I timetable rows for the companion schedule board,
+    /// marking past runs, upcoming runs, and the single active loop / next primary departure.
+    static func timetableRows(
+        for primaryLocation: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int
+    ) -> [TimetableRow] {
+        let schedule = getCurrentSchedule(dayType)
+
+        struct RawRow {
+            let id: Int
+            let phIITime: String?
+            let phITime: String?
+            let isPhIReturnImmediately: Bool
+            let isPhIIPast: Bool
+            let isPhIPast: Bool
+            let isLoopActiveNow: Bool
+        }
+
+        var rawRows: [RawRow] = []
+        rawRows.reserveCapacity(schedule.count)
+
+        for index in schedule.indices {
+            let busTime = schedule[index]
+            let isLoop = busTime.phI == BusScheduleStrings.returnImmediatelyToken
+
+            let phIISeconds = secondsFromTimeString(busTime.phII)
+            let phIITime = phIISeconds != nil ? busTime.phII : nil
+            let isPhIIPast = phIISeconds.map { $0 <= currentSecondsFromMidnight } ?? true
+
+            let phISeconds = isLoop ? nil : secondsFromTimeString(busTime.phI)
+            let phITime = phISeconds != nil ? busTime.phI : nil
+
+            let loopEndSeconds: Int? = {
+                guard isLoop, index + 1 < schedule.count else { return nil }
+                return secondsFromTimeString(schedule[index + 1].phII)
+            }()
+
+            let isLoopActiveNow: Bool = {
+                guard isLoop,
+                      let start = phIISeconds,
+                      let end = loopEndSeconds else { return false }
+                return currentSecondsFromMidnight >= start && currentSecondsFromMidnight < end
+            }()
+
+            let isPhIPast: Bool = {
+                if isLoop {
+                    guard let end = loopEndSeconds else { return true }
+                    return currentSecondsFromMidnight >= end
+                }
+                guard let phISeconds else { return true }
+                return phISeconds <= currentSecondsFromMidnight
+            }()
+
+            rawRows.append(RawRow(
+                id: busTime.id,
+                phIITime: phIITime,
+                phITime: phITime,
+                isPhIReturnImmediately: isLoop,
+                isPhIIPast: isPhIIPast,
+                isPhIPast: isPhIPast,
+                isLoopActiveNow: isLoopActiveNow
+            ))
+        }
+
+        let activeLoopRowID: Int? = primaryLocation == .phIParkingLot
+            ? rawRows.first(where: \.isLoopActiveNow)?.id
+            : nil
+
+        let nextPrimaryRowID: Int? = {
+            guard activeLoopRowID == nil else { return nil }
+            switch primaryLocation {
+            case .phIINewCampus:
+                return rawRows.first(where: { $0.phIITime != nil && !$0.isPhIIPast })?.id
+            case .phIParkingLot:
+                return rawRows.first(where: { $0.phITime != nil && !$0.isPhIPast })?.id
+            }
+        }()
+
+        return rawRows.map { raw in
+            let status: TimetableRowStatus
+            if raw.id == activeLoopRowID {
+                status = .activeLoop
+            } else if raw.id == nextPrimaryRowID {
+                status = .nextPrimary
+            } else if raw.isPhIIPast && raw.isPhIPast {
+                status = .past
+            } else {
+                status = .upcoming
+            }
+
+            return TimetableRow(
+                id: raw.id,
+                phIITime: raw.phIITime,
+                phITime: raw.phITime,
+                isPhIReturnImmediately: raw.isPhIReturnImmediately,
+                isPhIIPast: raw.isPhIIPast,
+                isPhIPast: raw.isPhIPast,
+                status: status
+            )
+        }
+    }
+
+    static func remainingRunCount(
+        for location: Location,
+        dayType: DayType,
+        currentSecondsFromMidnight: Int
+    ) -> Int {
+        let rows = timetableRows(
+            for: location,
+            dayType: dayType,
+            currentSecondsFromMidnight: currentSecondsFromMidnight
+        )
+        return rows.reduce(into: 0) { count, row in
+            switch location {
+            case .phIINewCampus:
+                if row.phIITime != nil && !row.isPhIIPast { count += 1 }
+            case .phIParkingLot:
+                if (row.phITime != nil || row.isPhIReturnImmediately) && !row.isPhIPast { count += 1 }
+            }
+        }
     }
 }
 

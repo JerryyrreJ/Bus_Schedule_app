@@ -7,90 +7,100 @@ struct BusReminderButton: View {
     let dayType: DayType
     @ObservedObject var scheduler: LocalBusReminderScheduler
     var isCompact: Bool = false
+    var referenceDateOverride: Date? = nil
 
     @Environment(\.openURL) private var openURL
     @State private var isDialogPresented = false
     @State private var alert: ReminderAlert?
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            let choices = Schedule.reminderChoices(
-                for: location,
-                dayType: dayType,
-                referenceDate: context.date
-            )
-            let departureDate = choices.compactMap(\.departureDate).first
-            let hasScheduledBus = departureDate != nil
-            let hasAvailableChoice = choices.contains(where: \.isAvailable)
-            let activeReminder = scheduler.activeReminder(
-                matching: location,
-                departureDate: departureDate,
-                referenceDate: context.date
-            )
-            let isReminderActive = activeReminder != nil
-            let canInteract = hasScheduledBus && (hasAvailableChoice || isReminderActive)
+        if let referenceDateOverride {
+            content(for: referenceDateOverride)
+        } else {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                content(for: context.date)
+            }
+        }
+    }
 
-            if hasScheduledBus {
-                Button {
-                    isDialogPresented = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: isReminderActive ? "bell.badge.fill" : "bell")
-                            .font(.system(size: isCompact ? 14 : 15, weight: .semibold))
+    @ViewBuilder
+    private func content(for referenceDate: Date) -> some View {
+        let choices = Schedule.reminderChoices(
+            for: location,
+            dayType: dayType,
+            referenceDate: referenceDate
+        )
+        let departureDate = choices.compactMap(\.departureDate).first
+        let hasScheduledBus = departureDate != nil
+        let hasAvailableChoice = choices.contains(where: \.isAvailable)
+        let activeReminder = scheduler.activeReminder(
+            matching: location,
+            departureDate: departureDate,
+            referenceDate: referenceDate
+        )
+        let isReminderActive = activeReminder != nil
+        let canInteract = hasScheduledBus && (hasAvailableChoice || isReminderActive)
 
-                        Text(labelText(activeReminder: activeReminder, hasScheduledBus: hasScheduledBus))
-                            .font(.system(size: isCompact ? 13.5 : 14, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
-                    }
-                    .foregroundColor(canInteract ? .primary : .secondary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, isCompact ? 8 : 10)
-                    .background(buttonBackground)
-                    .clipShape(Capsule())
+        if hasScheduledBus {
+            Button {
+                isDialogPresented = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: isReminderActive ? "bell.badge.fill" : "bell")
+                        .font(.system(size: isCompact ? 14 : 15, weight: .semibold))
+
+                    Text(labelText(activeReminder: activeReminder, hasScheduledBus: hasScheduledBus))
+                        .font(.system(size: isCompact ? 13.5 : 14, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
-                .buttonStyle(.plain)
-                .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-                .confirmationDialog(
-                    activeReminder == nil ? BusScheduleStrings.remindThisBus : BusScheduleStrings.changeReminder,
-                    isPresented: $isDialogPresented,
-                    titleVisibility: .visible
-                ) {
-                    ForEach(choices, id: \.leadMinutes) { choice in
-                        Button(BusScheduleStrings.reminderLeadOption(choice.leadMinutes)) {
-                            schedule(choice)
-                        }
-                        .disabled(!choice.isAvailable)
+                .foregroundColor(canInteract ? .primary : .secondary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, isCompact ? 8 : 10)
+                .background(buttonBackground)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+            .confirmationDialog(
+                activeReminder == nil ? BusScheduleStrings.remindThisBus : BusScheduleStrings.changeReminder,
+                isPresented: $isDialogPresented,
+                titleVisibility: .visible
+            ) {
+                ForEach(choices, id: \.leadMinutes) { choice in
+                    Button(BusScheduleStrings.reminderLeadOption(choice.leadMinutes)) {
+                        schedule(choice)
                     }
+                    .disabled(!choice.isAvailable)
+                }
 
-                    if activeReminder != nil {
-                        Button(BusScheduleStrings.cancelReminder, role: .destructive) {
-                            scheduler.cancelActiveReminder()
-                        }
-                    }
-                } message: {
-                    if hasScheduledBus && !hasAvailableChoice {
-                        Text(BusScheduleStrings.reminderTooClose)
+                if activeReminder != nil {
+                    Button(BusScheduleStrings.cancelReminder, role: .destructive) {
+                        scheduler.cancelActiveReminder()
                     }
                 }
-                .alert(item: $alert) { alert in
-                    switch alert {
-                    case .notificationsDenied:
-                        return Alert(
-                            title: Text(BusScheduleStrings.notificationsOff),
-                            message: Text(BusScheduleStrings.notificationPermissionMessage),
-                            primaryButton: .default(Text(BusScheduleStrings.openSettings)) {
-                                openSettings()
-                            },
-                            secondaryButton: .cancel()
-                        )
-                    case let .schedulingFailed(message):
-                        return Alert(
-                            title: Text(BusScheduleStrings.notificationSchedulingFailed),
-                            message: Text(message),
-                            dismissButton: .default(Text(BusScheduleStrings.done))
-                        )
-                    }
+            } message: {
+                if hasScheduledBus && !hasAvailableChoice {
+                    Text(BusScheduleStrings.reminderTooClose)
+                }
+            }
+            .alert(item: $alert) { alert in
+                switch alert {
+                case .notificationsDenied:
+                    return Alert(
+                        title: Text(BusScheduleStrings.notificationsOff),
+                        message: Text(BusScheduleStrings.notificationPermissionMessage),
+                        primaryButton: .default(Text(BusScheduleStrings.openSettings)) {
+                            openSettings()
+                        },
+                        secondaryButton: .cancel()
+                    )
+                case let .schedulingFailed(message):
+                    return Alert(
+                        title: Text(BusScheduleStrings.notificationSchedulingFailed),
+                        message: Text(message),
+                        dismissButton: .default(Text(BusScheduleStrings.done))
+                    )
                 }
             }
         }

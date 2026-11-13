@@ -580,6 +580,59 @@ struct ScheduleQueriesTests {
 
         #expect(BusScheduleStrings.last("22:10").contains("22:10"))
         #expect(BusScheduleStrings.other("08:30").contains("08:30"))
+        #expect(BusScheduleStrings.runsLeft(10).contains("10"))
+        #expect(!BusScheduleStrings.runsLeft(10).contains("%"))
+        #expect(BusScheduleStrings.totalRuns(36).contains("36"))
+        #expect(!BusScheduleStrings.totalRuns(36).contains("%"))
+    }
+
+    @Test("Timetable rows highlight active loop, next departure, and past boundaries")
+    func timetableRowsClassifyLoopNextAndPastRuns() {
+        // At 08:12 on Weekday:
+        // - Phase II next scheduled departure is 08:20 (id: 5)
+        // - Phase I is inside the 08:10..<08:20 Return Immediately slot (id: 4)
+        let phaseIIRows = Schedule.timetableRows(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            currentSecondsFromMidnight: seconds(8, 12)
+        )
+        #expect(phaseIIRows.count == Schedule.weekday.count)
+        #expect(phaseIIRows.filter(\.isHighlighted).map(\.id) == [5])
+        #expect(phaseIIRows.first(where: { $0.id == 5 })?.status == .nextPrimary)
+        // Row 4 (08:10 / Return Immediately until 08:20) has Phase II past, Phase I still active
+        let row4ForPhaseII = phaseIIRows.first(where: { $0.id == 4 })
+        #expect(row4ForPhaseII?.isPhIIPast == true)
+        #expect(row4ForPhaseII?.isPhIPast == false)
+        #expect(row4ForPhaseII?.status == .upcoming)
+
+        let phaseIRows = Schedule.timetableRows(
+            for: .phIParkingLot,
+            dayType: .weekday,
+            currentSecondsFromMidnight: seconds(8, 12)
+        )
+        #expect(phaseIRows.filter(\.isHighlighted).map(\.id) == [4])
+        #expect(phaseIRows.first(where: { $0.id == 4 })?.status == .activeLoop)
+        #expect(phaseIRows.first(where: { $0.id == 3 })?.status == .past)
+
+        // Remaining run counts at 17:35 on Weekday (17:40 through 22:10 = 10 runs)
+        #expect(Schedule.remainingRunCount(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            currentSecondsFromMidnight: seconds(17, 35)
+        ) == 10)
+
+        // After 22:30 on Weekday, all rows are past and remaining count is 0
+        let nightRows = Schedule.timetableRows(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            currentSecondsFromMidnight: seconds(22, 35)
+        )
+        #expect(nightRows.allSatisfy { $0.status == .past })
+        #expect(Schedule.remainingRunCount(
+            for: .phIINewCampus,
+            dayType: .weekday,
+            currentSecondsFromMidnight: seconds(22, 35)
+        ) == 0)
     }
 }
 

@@ -87,6 +87,12 @@ public enum BusScheduleStrings {
     public static var leavesAt: String { localized("leaves at") }
     public static var minutesLeft: String { localized("minutes left") }
     public static var before: String { localized("before") }
+    public static var returnRoute: String { localized("Return Route") }
+    public static var swap: String { localized("Swap") }
+    public static var todaysSchedule: String { localized("Today's Schedule") }
+    public static var remaining: String { localized("Remaining") }
+    public static var all: String { localized("All") }
+    public static var next: String { localized("Next") }
 
     public static func resource(_ key: StaticString) -> LocalizedStringResource {
         LocalizedStringResource(
@@ -142,6 +148,20 @@ public enum BusScheduleStrings {
     public static func reminderSet(_ value: Int) -> String {
         String(
             localized: "Reminder set · \(value)m before",
+            bundle: .module
+        )
+    }
+
+    public static func runsLeft(_ value: Int) -> String {
+        String(
+            localized: "\(value) left",
+            bundle: .module
+        )
+    }
+
+    public static func totalRuns(_ value: Int) -> String {
+        String(
+            localized: "\(value) runs",
             bundle: .module
         )
     }
